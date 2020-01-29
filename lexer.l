@@ -3,10 +3,7 @@
  #include "parser.tab.h"
  #include <stdlib.h>
 
- #include <string.h>
- //#include "myDef.h"
-
- void yyerror(char *);
+ void yyerror(const char *);
  //%option c++
 %}
 

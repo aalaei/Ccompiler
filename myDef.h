@@ -2,8 +2,12 @@
 #define MYDEF
  //start
  
- #define INT_TYPE 1
- #define VOID_TYPE 0
+
+ 
+ long long getFree()
+ {
+     return Cur_Mem_tmp++;
+ }
 
 //end
 #endif

@@ -4,13 +4,16 @@
  #include <stdlib.h>
  #include <string.h>
  #include <math.h>
+ #include <iostream> 
+ 
+ #include <stack> 
+ using namespace std;
+ static long long Cur_Mem_tmp=100;
+ stack<int> semantic_stack; 
  #include "myDef.h"
-
-
- void yyerror(char *);
+ 
+ void yyerror(const char *);
  int yylex(void);
- float sym[30];
- double ((*op[20])(double));
  int i=0;
  
 %}
@@ -27,30 +30,30 @@
 %token <keyword> VoidKeyWord
 %token <keyword> IntKeyWord
 %token <keyword> returnKeyWord
-%token <keyword> OpenBrace
-%token <keyword> CloseBrace
-%token <keyword> OpenParenthesis
-%token <keyword> CloseParenthesis
-%token <keyword> Semicolon
-%token <keyword> Comma
-%token <keyword> OperatorSmallEqual
-%token <keyword> OperatorSmall
-%token <keyword> OperatorBigEqual
-%token <keyword> OperatorBig
-%token <keyword> OperatorNotEqual
-%token <keyword> OperatorEqual
-%token <keyword> OperatorAssign
-%token <keyword> OperatorAdd
-%token <keyword> OperatorMinus
-%token <keyword> OperatorMult
-%token <keyword> OperatorDiv
-%token <keyword> OperatorOR
-%token <keyword> OperatorAnd
-%token <keyword> OperatorXOR
-%token <keyword> BinaryOR
-%token <keyword> BinaryAnd
-%token <keyword> BinaryNot
-%token <keyword> UnaryNot
+%token <operator> OpenBrace
+%token <operator> CloseBrace
+%token <operator> OpenParenthesis
+%token <operator> CloseParenthesis
+%token <deliminor> Semicolon
+%token <deliminor> Comma
+%token <operator> OperatorSmallEqual
+%token <operator> OperatorSmall
+%token <operator> OperatorBigEqual
+%token <operator> OperatorBig
+%token <operator> OperatorNotEqual
+%token <operator> OperatorEqual
+%token <operator> OperatorAssign
+%token <operator> OperatorAdd
+%token <operator> OperatorMinus
+%token <operator> OperatorMult
+%token <operator> OperatorDiv
+%token <operator> OperatorOR
+%token <operator> OperatorAnd
+%token <operator> OperatorXOR
+%token <operator> BinaryOR
+%token <operator> BinaryAnd
+%token <operator> BinaryNot
+%token <operator> UnaryNot
 
 %token <var> ID
 
@@ -91,16 +94,14 @@ STMT:
  STMT_ASSIGN |
  STMT_RETURN|
  STMT_CONDITIONAL|
- Semicolon
+ Semicolon{semantic_stack.top();}
 ;
 STMT_CONDITIONAL:
  ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
  | ifKeyWord OpenParenthesis EXP CloseParenthesis elseKeyWord  STMT
-
- 
-
+;
 EXP:
- ID OperatorAssign EXP{ $$ = sym[$1]; }
+ ID OperatorAssign EXP{ $$ = $1; }
  | TERM9
 ;
 
@@ -174,7 +175,7 @@ TYPE:
 ;
 %%
 
-void yyerror(char *s) {
+void yyerror(const char *s) {
  fprintf(stderr, "%s\n", s);
 }
 int main(void) {
