@@ -967,13 +967,14 @@ case 30:
 YY_RULE_SETUP
 #line 101 "lexer.l"
 {
- yylval.var = *yytext - 'a';
+ //yylval.name = *yytext;
+ strcpy(yylval.name,yytext);
  return ID;
  }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 105 "lexer.l"
+#line 106 "lexer.l"
 {
     yylval.iVal= atoi(yytext);    
     return NUM;
@@ -982,25 +983,25 @@ YY_RULE_SETUP
 case 32:
 /* rule 32 can match eol */
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 110 "lexer.l"
 { return *yytext; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 110 "lexer.l"
+#line 111 "lexer.l"
 ; /* skip whitespace */
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 111 "lexer.l"
+#line 112 "lexer.l"
 yyerror("Unknown character");
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 112 "lexer.l"
+#line 113 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 1004 "lex.yy.c"
+#line 1005 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2005,7 +2006,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 112 "lexer.l"
+#line 113 "lexer.l"
 
 int yywrap(void) {
  return 1;

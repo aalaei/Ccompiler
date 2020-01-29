@@ -7,60 +7,60 @@
  #include <iostream> 
  
  #include <stack> 
+ #include <vector>
  using namespace std;
  static long long Cur_Mem_tmp=100;
- stack<int> semantic_stack; 
+ 
  #include "myDef.h"
  
  void yyerror(const char *);
  int yylex(void);
- int i=0;
+ 
  
 %}
 
 %union{
 	int iVal;
-    float fVal;
-    char var;
-	char* ID;
+	char name[100];
 }
 %token <iVal> NUM
-%token <keyword> ifKeyWord
-%token <keyword> elseKeyWord
-%token <keyword> VoidKeyWord
-%token <keyword> IntKeyWord
-%token <keyword> returnKeyWord
-%token <operator> OpenBrace
-%token <operator> CloseBrace
-%token <operator> OpenParenthesis
-%token <operator> CloseParenthesis
-%token <deliminor> Semicolon
-%token <deliminor> Comma
-%token <operator> OperatorSmallEqual
-%token <operator> OperatorSmall
-%token <operator> OperatorBigEqual
-%token <operator> OperatorBig
-%token <operator> OperatorNotEqual
-%token <operator> OperatorEqual
-%token <operator> OperatorAssign
-%token <operator> OperatorAdd
-%token <operator> OperatorMinus
-%token <operator> OperatorMult
-%token <operator> OperatorDiv
-%token <operator> OperatorOR
-%token <operator> OperatorAnd
-%token <operator> OperatorXOR
-%token <operator> BinaryOR
-%token <operator> BinaryAnd
-%token <operator> BinaryNot
-%token <operator> UnaryNot
+%token <name> ifKeyWord
+%token <name> elseKeyWord
+%token <name> VoidKeyWord
+%token <name> IntKeyWord
+%token <name> returnKeyWord
+%token <name> OpenBrace
+%token <name> CloseBrace
+%token <name> OpenParenthesis
+%token <name> CloseParenthesis
+%token <name> Semicolon
+%token <name> Comma
+%token <name> OperatorSmallEqual
+%token <name> OperatorSmall
+%token <name> OperatorBigEqual
+%token <name> OperatorBig
+%token <name> OperatorNotEqual
+%token <name> OperatorEqual
+%token <name> OperatorAssign
+%token <name> OperatorAdd
 
-%token <var> ID
+%token <name> OperatorMinus
+%token <name> OperatorMult
+%token <name> OperatorDiv
+%token <name> OperatorOR
+%token <name> OperatorAnd
+%token <name> OperatorXOR
+%token <name> BinaryOR
+%token <name> BinaryAnd
+%token <name> BinaryNot
+%token <name> UnaryNot
 
-%type <keyword> STMT_DECLARE PGM TYPE
-%type <keyword> STMT STMTS STMT_CONDITIONAL
-%type <keyword> STMT_ASSIGN STMT_RETURN
-%type <keyword> IDS
+%token <name> ID
+
+%type <name> STMT_DECLARE PGM TYPE
+%type <name> STMT STMTS STMT_CONDITIONAL
+%type <name> STMT_ASSIGN STMT_RETURN
+%type <name> IDS
 %type <iVal> EXP
 %type <iVal> TERM
 %type <iVal> FACTOR
@@ -101,7 +101,7 @@ STMT_CONDITIONAL:
  | ifKeyWord OpenParenthesis EXP CloseParenthesis elseKeyWord  STMT
 ;
 EXP:
- ID OperatorAssign EXP{ $$ = $1; }
+ ID OperatorAssign EXP{ $$ = $3 ;}
  | TERM9
 ;
 

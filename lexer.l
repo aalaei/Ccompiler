@@ -99,10 +99,11 @@
 }
 
 [a-zA-Z]\w* {
- yylval.var = *yytext - 'a';
+ //yylval.name = *yytext;
+ strcpy(yylval.name,yytext);
  return ID;
  }
-[0-9]+ {
+([0-9])+ {
     yylval.iVal= atoi(yytext);    
     return NUM;
 }
