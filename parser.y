@@ -22,6 +22,8 @@
 	char* ID;
 }
 %token <iVal> NUM
+%token <keyword> ifKeyWord
+%token <keyword> elseKeyWord
 %token <keyword> VoidKeyWord
 %token <keyword> IntKeyWord
 %token <keyword> returnKeyWord
@@ -52,10 +54,9 @@
 
 %token <var> ID
 
-
-%type <ID> STMT_DECLARE PGM TYPE
-%type <ID> STMT STMTS
-%type <ID> STMT_ASSIGN STMT_RETURN
+%type <keyword> STMT_DECLARE PGM TYPE
+%type <keyword> STMT STMTS STMT_CONDITIONAL
+%type <keyword> STMT_ASSIGN STMT_RETURN
 %type <keyword> IDS
 %type <iVal> EXP
 %type <iVal> TERM
@@ -67,6 +68,7 @@
 %type <iVal> TERM6
 %type <iVal> TERM7
 %type <iVal> TERM8
+%type <iVal> TERM9
 
 //%token FLOAT VARIABLE INTEGER expSym logSym sqrtSym
 
@@ -79,85 +81,93 @@ program:
  ;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis OpenBrace STMTS CloseBrace PGM |
-  /*nothing!*/
+  /*nothing!*/{}
  ;
 STMTS:
- STMT STMTS |
+ STMT STMTS | {}
  ;
 STMT:
  STMT_DECLARE | 
  STMT_ASSIGN |
  STMT_RETURN|
- Semicolon;
+ STMT_CONDITIONAL|
+ Semicolon
+;
+STMT_CONDITIONAL:
+ ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
+ | ifKeyWord OpenParenthesis EXP CloseParenthesis elseKeyWord  STMT
+
+ 
 
 EXP:
- EXP BinaryOR EXP {$$ = ($1)||($3);}
- | TERM8
+ ID OperatorAssign EXP{ $$ = sym[$1]; }
+ | TERM9
+;
+
+TERM9:
+ TERM8 BinaryOR TERM8 {$$ = ($1)||($3);}
 ;
 
 TERM8:
- TERM8 BinaryAnd TERM8 {$$ = ($1)&&($3);}
- | TERM7
+ TERM7 BinaryAnd TERM7 {$$ = ($1)&&($3);}
 ;
 TERM7:
- TERM7 OperatorOR TERM7 {$$ = ($1)|($3);}
- | TERM6
+ TERM6 OperatorOR TERM6 {$$ = ($1)|($3);}
+ 
 ;
 
 TERM6:
- TERM6 OperatorXOR TERM6 {$$ = ($1)^($3);}
- | TERM5
+ TERM5 OperatorXOR TERM5 {$$ = ($1)^($3);}
 ;
 TERM5:
- TERM5 OperatorAnd TERM5 {$$ = ($1)&($3);}
- | TERM4
+ TERM4 OperatorAnd TERM4 {$$ = ($1)&($3);}
+ 
 ;
 
 TERM4:
- | TERM4 OperatorEqual TERM4 {$$ = ($1)==($3);}
- | TERM4 OperatorNotEqual TERM4 {$$ = ($1)!=($3);}
- | TERM3
- ;
+ TERM3 OperatorEqual TERM3 {$$ = ($1)==($3);}
+ | TERM3 OperatorNotEqual TERM3 {$$ = ($1)!=($3);}
+;
 
 TERM3:
- TERM3 OperatorSmall TERM3 {$$ = ($1)<($3);}
- | TERM3 OperatorSmallEqual TERM3 {$$ = ($1)<=($3);}
- | TERM3 OperatorBig TERM3 {$$ = ($1)>($3);}
- | TERM3 OperatorBigEqual TERM3 {$$ = ($1)>=($3);}
- | TERM2
+ TERM2 OperatorSmall TERM2 {$$ = ($1)<($3);}
+ | TERM2 OperatorSmallEqual TERM2 {$$ = ($1)<=($3);}
+ | TERM2 OperatorBig TERM2 {$$ = ($1)>($3);}
+ | TERM2 OperatorBigEqual TERM2 {$$ = ($1)>=($3);}
+ 
 ;
  
 TERM2:
- TERM2 OperatorAdd TERM2 { $$ = ($1) + ($3); }
- | TERM2 OperatorMinus TERM2 { $$ = ($1) - ($3); }
- | TERM
+ TERM OperatorAdd TERM { $$ = ($1) + ($3); }
+ | TERM OperatorMinus TERM { $$ = ($1) - ($3); }
 ;
  
 TERM:
- TERM OperatorMult TERM { $$ = ($1) * ($3); }
- | TERM OperatorDiv TERM { $$ = ($1) / ($3); }
- | FACTOR
+ FACTOR OperatorMult FACTOR { $$ = ($1) * ($3); }
+ | FACTOR OperatorDiv FACTOR { $$ = ($1) / ($3); }
 ;
 FACTOR:
  NUM
- | ID { $$ = sym[$1]; }
  | OperatorMinus FACTOR { $$ = -($2); }
  | UnaryNot FACTOR { $$ = ~($2); }
  | BinaryNot FACTOR { $$ = !($2); }
  | OpenParenthesis EXP CloseParenthesis { $$ = $2; }
-
+;
 STMT_DECLARE:
-TYPE |
-ID |
-IDS;
+ TYPE
+ ID
+ IDS
+;
 IDS:
  Semicolon |
  Comma ID IDS
 ;
 STMT_ASSIGN:
-ID OperatorAssign EXP Semicolon;
+ ID OperatorAssign EXP Semicolon
+;
 STMT_RETURN:
-returnKeyWord EXP Semicolon;
+ returnKeyWord EXP Semicolon
+;
 TYPE:
  IntKeyWord |
  VoidKeyWord

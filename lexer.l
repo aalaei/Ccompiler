@@ -11,7 +11,12 @@
 %}
 
 %%
-
+"if" {
+    return ifKeyWord;
+}
+"else" {
+    return elseKeyWord;
+}
 "return" {
     return returnKeyWord;
 }
