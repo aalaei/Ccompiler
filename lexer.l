@@ -6,7 +6,8 @@
  void yyerror(const char *);
  //%option c++
 %}
-
+numbers ([0-9])+
+alpha ([a-zA-Z])+
 %%
 "if" {
     return ifKeyWord;
@@ -98,16 +99,16 @@
     return UnaryNot;
 }
 
-[a-zA-Z]\w* {
+{alpha} {
  //yylval.name = *yytext;
  strcpy(yylval.name,yytext);
  return ID;
  }
-([0-9])+ {
+{numbers} {
     yylval.iVal= atoi(yytext);    
     return NUM;
 }
-[-+()=/*\n] { return *yytext; }
+
 [ \t] ; /* skip whitespace */
 . yyerror("Unknown character");
 %%

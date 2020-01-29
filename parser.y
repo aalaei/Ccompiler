@@ -13,10 +13,15 @@
  
  #include "myDef.h"
  
- void yyerror(const char *);
- int yylex(void);
+ extern FILE* yyin;
+ extern int yylex();
+ void yyerror(const char* error);
  
- 
+ int yylineNum=0;
+ FILE* f1;
+
+ int yyparse();
+	
 %}
 
 %union{
@@ -61,6 +66,8 @@
 %type <name> STMT STMTS STMT_CONDITIONAL
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
+
+
 %type <iVal> EXP
 %type <iVal> TERM
 %type <iVal> FACTOR
@@ -76,10 +83,12 @@
 //%token FLOAT VARIABLE INTEGER expSym logSym sqrtSym
 
 
-%left '+' '-' //'*' '/'
-%right '*' '/'
+//%left '+' '-' //'*' '/'
+//%right '*' '/'
+
+
 %%
-program:
+PROGRAM:
  STMT_DECLARE PGM 
  ;
 PGM:
@@ -98,36 +107,41 @@ STMT:
 ;
 STMT_CONDITIONAL:
  ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
- | ifKeyWord OpenParenthesis EXP CloseParenthesis elseKeyWord  STMT
+ | ifKeyWord OpenParenthesis EXP CloseParenthesis STMT elseKeyWord  STMT
 ;
 EXP:
- ID OperatorAssign EXP{ $$ = $3 ;}
- | TERM9
+ /*ID OperatorAssign EXP{ $$ = $3 ;}
+ |*/ TERM9
 ;
 
 TERM9:
  TERM8 BinaryOR TERM8 {$$ = ($1)||($3);}
+ | TERM8
 ;
 
 TERM8:
  TERM7 BinaryAnd TERM7 {$$ = ($1)&&($3);}
+ | TERM7
 ;
 TERM7:
  TERM6 OperatorOR TERM6 {$$ = ($1)|($3);}
+ | TERM6
  
 ;
 
 TERM6:
  TERM5 OperatorXOR TERM5 {$$ = ($1)^($3);}
+ | TERM5
 ;
 TERM5:
  TERM4 OperatorAnd TERM4 {$$ = ($1)&($3);}
- 
+ | TERM4
 ;
 
 TERM4:
  TERM3 OperatorEqual TERM3 {$$ = ($1)==($3);}
  | TERM3 OperatorNotEqual TERM3 {$$ = ($1)!=($3);}
+ |TERM3
 ;
 
 TERM3:
@@ -135,17 +149,20 @@ TERM3:
  | TERM2 OperatorSmallEqual TERM2 {$$ = ($1)<=($3);}
  | TERM2 OperatorBig TERM2 {$$ = ($1)>($3);}
  | TERM2 OperatorBigEqual TERM2 {$$ = ($1)>=($3);}
+ | TERM2
  
 ;
  
 TERM2:
  TERM OperatorAdd TERM { $$ = ($1) + ($3); }
  | TERM OperatorMinus TERM { $$ = ($1) - ($3); }
+ | TERM
 ;
  
 TERM:
  FACTOR OperatorMult FACTOR { $$ = ($1) * ($3); }
  | FACTOR OperatorDiv FACTOR { $$ = ($1) / ($3); }
+ | FACTOR
 ;
 FACTOR:
  NUM
@@ -155,9 +172,7 @@ FACTOR:
  | OpenParenthesis EXP CloseParenthesis { $$ = $2; }
 ;
 STMT_DECLARE:
- TYPE
- ID
- IDS
+ TYPE ID IDS
 ;
 IDS:
  Semicolon |
@@ -175,9 +190,25 @@ TYPE:
 ;
 %%
 
+
 void yyerror(const char *s) {
  fprintf(stderr, "%s\n", s);
 }
-int main(void) {
- yyparse();
+int main(int argc, char *argv[])
+{
+	yyin = fopen(argv[1], "r");
+	f1=fopen("output","w");
+
+   if(!yyparse())
+		printf("\nParsing complete\n");
+	else
+	{
+		printf("\nParsing failed\n");
+		exit(-1);
+	}
+    fprintf(f1,"\n");
+    
+	fclose(yyin);
+	fclose(f1);
+    return 0;
 }
