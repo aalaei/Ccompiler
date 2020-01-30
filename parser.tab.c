@@ -481,14 +481,14 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
        0,    92,    92,    95,    96,    99,    99,   102,   103,   104,
-     105,   106,   109,   110,   114,   118,   119,   123,   124,   127,
-     128,   133,   134,   137,   138,   142,   143,   144,   148,   149,
-     150,   151,   152,   157,   158,   159,   163,   164,   165,   168,
-     169,   170,   171,   172,   175,   178,   179,   182,   185,   188,
-     189
+     105,   106,   109,   110,   114,   118,   143,   147,   176,   179,
+     195,   200,   216,   219,   235,   239,   261,   283,   287,   310,
+     333,   356,   379,   384,   400,   416,   420,   436,   454,   457,
+     458,   475,   489,   509,   515,   518,   519,   522,   525,   528,
+     529
 };
 #endif
 
@@ -1339,121 +1339,441 @@ yyreduce:
     break;
 
   case 15:
-#line 118 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))||((yyvsp[0].iVal));}
-#line 1345 "parser.tab.c" /* yacc.c:1646  */
+#line 119 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bne $s0,$zero,BinaryOR_True"); //age sefr nabood boro be true
+	
+						 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bne $s0,$zero,True"); //age sefr nabood boro be true
+	//age false shod
+	pb.push_back("li $s0,0");  
+	pb.push_back("j BinaryOR_write");  
+	
+	//age true shod
+	pb.push_back("BinaryOR_True: li $s0,1");  
+	 
+	 
+	pb.push_back("BinaryOR_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1368 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 123 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))&&((yyvsp[0].iVal));}
-#line 1351 "parser.tab.c" /* yacc.c:1646  */
+#line 148 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	
+	
+		 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	
+	//age hardo sefr naboodan yani javab true mishod					 
+	
+	 
+	pb.push_back("li $s0,1");  
+	pb.push_back("j BinaryAnd_write");  
+	
+	//age true shod
+	pb.push_back("BinaryAnd_False: li $s0,0");  
+	 
+	 
+	pb.push_back("BinaryAnd_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1401 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 127 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))|((yyvsp[0].iVal));}
-#line 1357 "parser.tab.c" /* yacc.c:1646  */
+#line 180 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("or $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1421 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 133 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))^((yyvsp[0].iVal));}
-#line 1363 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 23:
-#line 137 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))&((yyvsp[0].iVal));}
-#line 1369 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 25:
-#line 142 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))==((yyvsp[0].iVal));}
-#line 1375 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 26:
-#line 143 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))!=((yyvsp[0].iVal));}
-#line 1381 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 28:
-#line 148 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))<((yyvsp[0].iVal));}
-#line 1387 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 29:
-#line 149 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))<=((yyvsp[0].iVal));}
-#line 1393 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 30:
-#line 150 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))>((yyvsp[0].iVal));}
-#line 1399 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 31:
-#line 151 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal) = ((yyvsp[-2].iVal))>=((yyvsp[0].iVal));}
-#line 1405 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 33:
-#line 157 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = ((yyvsp[-2].iVal)) + ((yyvsp[0].iVal)); }
-#line 1411 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 34:
-#line 158 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = ((yyvsp[-2].iVal)) - ((yyvsp[0].iVal)); }
-#line 1417 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 36:
-#line 163 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = ((yyvsp[-2].iVal)) * ((yyvsp[0].iVal)); }
-#line 1423 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 37:
-#line 164 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = ((yyvsp[-2].iVal)) / ((yyvsp[0].iVal)); }
-#line 1429 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 40:
-#line 169 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = -((yyvsp[0].iVal)); }
-#line 1435 "parser.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 41:
-#line 170 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = ~((yyvsp[0].iVal)); }
+#line 201 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("xor $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
 #line 1441 "parser.tab.c" /* yacc.c:1646  */
     break;
 
+  case 23:
+#line 220 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("and $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1461 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 25:
+#line 240 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$s1,OperatorEqual_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorEqual_write"); 
+	
+	//true bood
+	pb.push_back("OperatorEqual_true: li $s0, 1"); 
+	pb.push_back("OperatorEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1487 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 26:
+#line 262 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bnq $s0,$s1,OperatorNotEqual_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorNotEqual_write"); 
+	
+	//true bood
+	pb.push_back("OperatorNotEqual_true: li $s0, 1"); 
+	pb.push_back("OperatorNotEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1513 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 28:
+#line 288 "parser.y" /* yacc.c:1646  */
+    {							//    s1 < s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s1, $s0,OperatorSmall_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorSmall_write"); 
+	
+	//true bood
+	pb.push_back("OperatorSmall_true: li $s0, 1"); 
+	pb.push_back("OperatorSmall_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1539 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 29:
+#line 311 "parser.y" /* yacc.c:1646  */
+    {								//          s1  > s0 => false
+								//          s0  < s1 => false
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s0, $s1,OperatorSmallEqual_false"); 
+	
+	//age true bood
+	pb.push_back("li $s0, 1"); 
+	pb.push_back("j OperatorSmallEqual_write"); 
+	
+	//false bood
+	pb.push_back("OperatorSmallEqual_false: li $s0, 0"); 
+	pb.push_back("OperatorSmallEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1566 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 334 "parser.y" /* yacc.c:1646  */
+    {						   // 		 s1 > s0
+  						   // 		 s0 < s1
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s0, $s1,OperatorBig_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorBig_write"); 
+	
+	//true bood
+	pb.push_back("OperatorBig_true: li $s0, 1"); 
+	pb.push_back("OperatorBig_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1593 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 31:
+#line 357 "parser.y" /* yacc.c:1646  */
+    {								//          s1  < s0 => false
+								 
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s1, $s0,OperatorBigEqual_false"); 
+	
+	//age true bood
+	pb.push_back("li $s0, 1"); 
+	pb.push_back("j OperatorBigEqual_write"); 
+	
+	//false bood
+	pb.push_back("OperatorBigEqual_false: li $s0, 0"); 
+	pb.push_back("OperatorBigEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+#line 1620 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 385 "parser.y" /* yacc.c:1646  */
+    {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("add $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1640 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 401 "parser.y" /* yacc.c:1646  */
+    {								//    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("sub $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1660 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 36:
+#line 421 "parser.y" /* yacc.c:1646  */
+    {								//    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("mul $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1680 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 37:
+#line 437 "parser.y" /* yacc.c:1646  */
+    {								  //    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("div $s1,$s0"); 
+	pb.push_back("mflo $s2"); 
+	 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1702 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 40:
+#line 459 "parser.y" /* yacc.c:1646  */
+    {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("li $1,-1"); 
+	
+	
+	
+	pb.push_back("mul $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1723 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 41:
+#line 476 "parser.y" /* yacc.c:1646  */
+    {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	 
+	
+	pb.push_back("not $s2,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1741 "parser.tab.c" /* yacc.c:1646  */
+    break;
+
   case 42:
-#line 171 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = !((yyvsp[0].iVal)); }
-#line 1447 "parser.tab.c" /* yacc.c:1646  */
+#line 490 "parser.y" /* yacc.c:1646  */
+    {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("beq $s0,$zero,BinaryNot_return1"); 
+	pb.push_back("li s2,0"); 
+	
+	pb.push_back("j BinaryNot_save"); 
+	
+	pb.push_back("BinaryNot_return1 : li s2,1"); 
+	
+	
+	
+	pb.push_back("BinaryNot_save: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+#line 1765 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 172 "parser.y" /* yacc.c:1646  */
-    { (yyval.iVal) = (yyvsp[-1].iVal); }
-#line 1453 "parser.tab.c" /* yacc.c:1646  */
+#line 510 "parser.y" /* yacc.c:1646  */
+    {
+		 //not thing
+	 }
+#line 1773 "parser.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1457 "parser.tab.c" /* yacc.c:1646  */
+#line 1777 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1681,7 +2001,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 191 "parser.y" /* yacc.c:1906  */
+#line 531 "parser.y" /* yacc.c:1906  */
 
 
 
@@ -1693,12 +2013,18 @@ int main(int argc, char *argv[])
 	yyin = fopen(argv[1], "r");
 	f1=fopen("output","w");
 
-   if(!yyparse())
+    if(!yyparse())
 		printf("\nParsing complete\n");
 	else
 	{
 		printf("\nParsing failed\n");
 		exit(-1);
+	}
+	printf("MIPS CODE:\n");
+	for(int j=0;j<pb.size();j++)
+	{
+		fprintf(f1,"%s\n",pb[j].c_str());
+		printf("%s\n",pb[j].c_str());
 	}
     fprintf(f1,"\n");
     

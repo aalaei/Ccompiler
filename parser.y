@@ -115,61 +115,401 @@ EXP:
 ;
 
 TERM9:
- TERM8 BinaryOR TERM8 {$$ = ($1)||($3);}
+ TERM8 BinaryOR TERM8 // {$$ = ($1)||($3);}
+  {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bne $s0,$zero,BinaryOR_True"); //age sefr nabood boro be true
+	
+						 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bne $s0,$zero,True"); //age sefr nabood boro be true
+	//age false shod
+	pb.push_back("li $s0,0");  
+	pb.push_back("j BinaryOR_write");  
+	
+	//age true shod
+	pb.push_back("BinaryOR_True: li $s0,1");  
+	 
+	 
+	pb.push_back("BinaryOR_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
  | TERM8
 ;
 
 TERM8:
- TERM7 BinaryAnd TERM7 {$$ = ($1)&&($3);}
+ TERM7 BinaryAnd TERM7 //{$$ = ($1)&&($3);}
+ {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	
+	
+		 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	
+	//age hardo sefr naboodan yani javab true mishod					 
+	
+	 
+	pb.push_back("li $s0,1");  
+	pb.push_back("j BinaryAnd_write");  
+	
+	//age true shod
+	pb.push_back("BinaryAnd_False: li $s0,0");  
+	 
+	 
+	pb.push_back("BinaryAnd_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
  | TERM7
 ;
 TERM7:
- TERM6 OperatorOR TERM6 {$$ = ($1)|($3);}
+ TERM6 OperatorOR TERM6 // {$$ = ($1)|($3);}
+  {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("or $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
  | TERM6
  
 ;
 
 TERM6:
- TERM5 OperatorXOR TERM5 {$$ = ($1)^($3);}
+ TERM5 OperatorXOR TERM5 // {$$ = ($1)^($3);}
+  {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("xor $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
  | TERM5
 ;
 TERM5:
- TERM4 OperatorAnd TERM4 {$$ = ($1)&($3);}
+ TERM4 OperatorAnd TERM4 // {$$ = ($1)&($3);}
+ {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("and $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
  | TERM4
 ;
 
 TERM4:
- TERM3 OperatorEqual TERM3 {$$ = ($1)==($3);}
- | TERM3 OperatorNotEqual TERM3 {$$ = ($1)!=($3);}
+ TERM3 OperatorEqual TERM3 // {$$ = ($1)==($3);}
+ {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("beq $s0,$s1,OperatorEqual_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorEqual_write"); 
+	
+	//true bood
+	pb.push_back("OperatorEqual_true: li $s0, 1"); 
+	pb.push_back("OperatorEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+ | TERM3 OperatorNotEqual TERM3 // {$$ = ($1)!=($3);}
+  {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("bnq $s0,$s1,OperatorNotEqual_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorNotEqual_write"); 
+	
+	//true bood
+	pb.push_back("OperatorNotEqual_true: li $s0, 1"); 
+	pb.push_back("OperatorNotEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
  |TERM3
 ;
 
 TERM3:
- TERM2 OperatorSmall TERM2 {$$ = ($1)<($3);}
- | TERM2 OperatorSmallEqual TERM2 {$$ = ($1)<=($3);}
- | TERM2 OperatorBig TERM2 {$$ = ($1)>($3);}
- | TERM2 OperatorBigEqual TERM2 {$$ = ($1)>=($3);}
+ TERM2 OperatorSmall TERM2 //{$$ = ($1)<($3);}
+ {							//    s1 < s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s1, $s0,OperatorSmall_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorSmall_write"); 
+	
+	//true bood
+	pb.push_back("OperatorSmall_true: li $s0, 1"); 
+	pb.push_back("OperatorSmall_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+	 
+ | TERM2 OperatorSmallEqual TERM2 // {$$ = ($1)<=($3);}
+ {								//          s1  > s0 => false
+								//          s0  < s1 => false
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s0, $s1,OperatorSmallEqual_false"); 
+	
+	//age true bood
+	pb.push_back("li $s0, 1"); 
+	pb.push_back("j OperatorSmallEqual_write"); 
+	
+	//false bood
+	pb.push_back("OperatorSmallEqual_false: li $s0, 0"); 
+	pb.push_back("OperatorSmallEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+ | TERM2 OperatorBig TERM2 // {$$ = ($1)>($3);}
+  {						   // 		 s1 > s0
+  						   // 		 s0 < s1
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s0, $s1,OperatorBig_true"); 
+	
+	//age false bood
+	pb.push_back("li $s0, 0"); 
+	pb.push_back("j OperatorBig_write"); 
+	
+	//true bood
+	pb.push_back("OperatorBig_true: li $s0, 1"); 
+	pb.push_back("OperatorBig_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
+ | TERM2 OperatorBigEqual TERM2 //   {$$ = ($1)>=($3);}
+ {								//          s1  < s0 => false
+								 
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("blt $s1, $s0,OperatorBigEqual_false"); 
+	
+	//age true bood
+	pb.push_back("li $s0, 1"); 
+	pb.push_back("j OperatorBigEqual_write"); 
+	
+	//false bood
+	pb.push_back("OperatorBigEqual_false: li $s0, 0"); 
+	pb.push_back("OperatorBigEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+ }
  | TERM2
  
 ;
  
 TERM2:
- TERM OperatorAdd TERM { $$ = ($1) + ($3); }
- | TERM OperatorMinus TERM { $$ = ($1) - ($3); }
+ TERM OperatorAdd TERM // { $$ = ($1) + ($3); }
+  {
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("add $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+ | TERM OperatorMinus TERM // { $$ = ($1) - ($3); }
+  {								//    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("sub $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
  | TERM
 ;
  
 TERM:
- FACTOR OperatorMult FACTOR { $$ = ($1) * ($3); }
- | FACTOR OperatorDiv FACTOR { $$ = ($1) / ($3); }
+ FACTOR OperatorMult FACTOR //{ $$ = ($1) * ($3); }
+ {								//    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("mul $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+ | FACTOR OperatorDiv FACTOR // { $$ = ($1) / ($3); }
+ {								  //    s1     s0
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	pb.push_back("div $s1,$s0"); 
+	pb.push_back("mflo $s2"); 
+	 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
  | FACTOR
 ;
 FACTOR:
  NUM
- | OperatorMinus FACTOR { $$ = -($2); }
- | UnaryNot FACTOR { $$ = ~($2); }
- | BinaryNot FACTOR { $$ = !($2); }
- | OpenParenthesis EXP CloseParenthesis { $$ = $2; }
+ | OperatorMinus FACTOR // { $$ = -($2); }
+ {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("li $1,-1"); 
+	
+	
+	
+	pb.push_back("mul $s2,$s1,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+ | UnaryNot FACTOR //{ $$ = ~($2); }
+ {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+	 
+	
+	pb.push_back("not $s2,$s0"); 
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+ | BinaryNot FACTOR //{ $$ = !($2); }
+ {								//   
+	 					 
+	pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+	
+						 
+	pb.push_back("beq $s0,$zero,BinaryNot_return1"); 
+	pb.push_back("li s2,0"); 
+	
+	pb.push_back("j BinaryNot_save"); 
+	
+	pb.push_back("BinaryNot_return1 : li s2,1"); 
+	
+	
+	
+	pb.push_back("BinaryNot_save: addi $sp, $sp,-4"); 
+	pb.push_back("sw $s2,0($sp)"); 
+	
+ }
+ | OpenParenthesis EXP CloseParenthesis //{ $$ = $2; }
+	 {
+		 //not thing
+	 }
 ;
 STMT_DECLARE:
  TYPE ID IDS
@@ -199,12 +539,18 @@ int main(int argc, char *argv[])
 	yyin = fopen(argv[1], "r");
 	f1=fopen("output","w");
 
-   if(!yyparse())
+    if(!yyparse())
 		printf("\nParsing complete\n");
 	else
 	{
 		printf("\nParsing failed\n");
 		exit(-1);
+	}
+	printf("MIPS CODE:\n");
+	for(int j=0;j<pb.size();j++)
+	{
+		fprintf(f1,"%s\n",pb[j].c_str());
+		printf("%s\n",pb[j].c_str());
 	}
     fprintf(f1,"\n");
     
