@@ -9,7 +9,9 @@
  #include <stdlib.h>
 
 long long PC; 
+
 stack<int> semantic_stack; 
+
 
 enum SemanticType{
     NONE,
@@ -18,7 +20,20 @@ enum SemanticType{
     ,SEM_TYPE_FUNCTION_VOID
 };
 class Node{
+private:
+    string tp()
+    {
+        if(TYPE==NONE)
+            return "None";
+        else if (TYPE==SEM_TYPE_VARIABLE_INT)
+            return "int_variable";
+        else if (TYPE==SEM_TYPE_FUNCTION_INT)
+            return "int_function";
+        else if (TYPE==SEM_TYPE_FUNCTION_VOID)
+            return "void_function";
+    }
 public:
+
     Node(){};
     SemanticType TYPE;
     long long address;
@@ -26,7 +41,7 @@ public:
     int numOfArguments;
     void print()
     {
-        cout <<TYPE<<"\t"<< address <<"\t" <<scope <<"\t"<< numOfArguments;
+        cout << this->tp()<<"\t"<< address <<"\t" <<scope <<"\t"<< numOfArguments;
     }
 };
 map<string,Node> symbolTable;
@@ -77,8 +92,10 @@ bool declare_Function(string name,int numOfArguments,string type)
     else return false;
     tmp.numOfArguments=numOfArguments;
     symbolTable[name]=tmp;
-    pb.push_back(name+": push %ebp");
-    pb.push_back("mov %esp,%ebp");
+
+    pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw %ebp,0($sp)"); 
+    pb.push_back("movl %esp,%ebp");
     return true;
 }
 int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,int  arg3=0)
@@ -108,7 +125,7 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
       }
 	  //sprintf(tmp,"jalr %llu",symbolTable[name].address);
       pb.push_back("jal "+name);
-      pb.push_back("push res");
+      //pb.push_back("push res");
 	  
 }
 void assignto(string ID)
@@ -122,25 +139,38 @@ void assignto(string ID)
     }
     pb.push_back("lw $s0, 0($sp)"); 
 
-    sprintf(tmp,"sw $s0, 0($%llu)",var.address);
+    sprintf(tmp,"sw $s0, %llu($zero)",var.address);
     pb.push_back(tmp); 
 
 }
 void makeGolobal()
 {
     map<string,Node>::iterator it = symbolTable.begin();
+    pb.push_back(".data:");
 	while(it != symbolTable.end())
     { 
 		if(it->second.TYPE == SEM_TYPE_VARIABLE_INT)
-            it->second.scope=0;
+            {
+                it->second.scope=0;
+                pb.push_back("\t"+it->first +": .word");
+            }
         it++;
+        //if (it->first!="")
+            
     }
+    pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
+    pb.push_back(".text:");
+    push(pb.size());
+    pb.push_back("");
 	
 }
 void functionFinished()
 {
-    pb.push_back("mov %ebp, %esp");
-    pb.push_back("pop %ebp");
+    pb.push_back("movl %ebp, %esp");
+    //pb.push_back("pop %ebp");
+    pb.push_back("lw %ebp, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+
     pb.push_back("ret");
 }
 //end

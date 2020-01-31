@@ -7,10 +7,8 @@ int main()
 {
 
    // int a;
-    int b;
-    b=8;
+    int b=8;
     b=b+1;
     b=x(b,-1);
-    return 2*b;
-
+    return b/(4-3);
 }

@@ -84,7 +84,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 25 "parser.y" /* yacc.c:1909  */
+#line 26 "parser.y" /* yacc.c:1909  */
 
 	int iVal;
 	char name[100];

@@ -6,7 +6,7 @@
 
  using namespace std;
  static long long Cur_Mem_tmp=100;
- 
+ bool verbose;
  #include "myDef.h"
  
  extern FILE* yyin;
@@ -17,6 +17,7 @@
  FILE* f1;
 
  extern long long PC; 
+ 
 
  int yyparse();
 	
@@ -159,7 +160,7 @@ TERM9:
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bne $s0,$zero,True"); //age sefr nabood boro be true
+	pb.push_back("bne $s0,$zero,BinaryOR_True"); //age sefr nabood boro be true
 	//age false shod
 	pb.push_back("li $s0,0");  
 	pb.push_back("j BinaryOR_write");  
@@ -460,7 +461,7 @@ TERM:
 	pb.push_back("addi $sp, $sp,4"); 
 	
 	pb.push_back("mul $s2,$s1,$s0"); 
-	
+	//????????????????????????????????????
 	pb.push_back("addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	
@@ -477,8 +478,13 @@ TERM:
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-						 
-	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("bne $s0,$zero,skip");
+	pb.push_back("li $v0,4");
+	pb.push_back("la $a0,err_string");
+	pb.push_back("syscall");
+	pb.push_back("li $v0, 10");
+	pb.push_back("syscall");
+	pb.push_back("skip:lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
 	pb.push_back("div $s1,$s0"); 
@@ -495,9 +501,11 @@ FACTOR:
  NUM {
 	 $$ = $1;
 	 char tmp[500];
-	 sprintf(tmp,"movl $%d, %%eax",$1);
+	 //sprintf(tmp,"movl $%d, %%eax",$1);
+	 sprintf(tmp,"li $s0 , %d",$1);
 	 pb.push_back(string(tmp));
-	 pb.push_back("push %eax");
+	 pb.push_back("addi $sp,$sp,-4");
+	 pb.push_back("sw $s0,0($sp)");
 	 }
  | OperatorMinus FACTOR
    {								//   
@@ -506,7 +514,7 @@ FACTOR:
 	pb.push_back("addi $sp, $sp,4"); 
 	
 						 
-	pb.push_back("li $1,-1"); 
+	pb.push_back("li $s1,-1"); 
 	
 	
 	pb.push_back("mul $s2,$s1,$s0"); 
@@ -537,11 +545,11 @@ FACTOR:
 	
 						 
 	pb.push_back("beq $s0,$zero,BinaryNot_return1"); 
-	pb.push_back("li s2,0"); 
+	pb.push_back("li $s2,0"); 
 	
 	pb.push_back("j BinaryNot_save"); 
 	
-	pb.push_back("BinaryNot_return1 : li s2,1"); 
+	pb.push_back("BinaryNot_return1 : li $s2,1"); 
 	
 	
 	
@@ -554,11 +562,20 @@ FACTOR:
 		$$ = $2;
 		 //not thing
 	 }
-	| ID {$$=123;}
+	| ID 
+	{
+		$$ = 123; 
+		char temp[500];
+		sprintf(temp,"lw $s0,%llu($zero)",symbolTable[$1].address);
+		pb.push_back(temp);
+		pb.push_back("addi $sp, $sp,-4"); 
+		pb.push_back("sw $s0,0($sp)");
+	}
 	| EXP_FUNCTIONCALL{};
 ;
 STMT_DECLARE:
- IntKeyWord ID {declare_IntVariable($2);} IDS
+ IntKeyWord ID {declare_IntVariable($2);} IDS Semicolon
+ |IntKeyWord ID {declare_IntVariable($2);} OperatorAssign EXP Semicolon {assignto($2);}
 ;
 EXP_FUNCTIONCALL:
  ID OpenParenthesis  CloseParenthesis {$$=functionCall($1,0);}
@@ -569,15 +586,15 @@ EXP_FUNCTIONCALL:
  
 ;
 IDS:
- Semicolon |
- Comma ID {declare_IntVariable($2);} IDS
+  {} |
+ Comma ID {declare_IntVariable($2);} IDS 
 ;
 STMT_ASSIGN:
  ID OperatorAssign EXP Semicolon { assignto($1);}
  | EXP Semicolon {}
 ;
 STMT_RETURN:
- returnKeyWord EXP Semicolon{pb.push_back("ret");}
+ returnKeyWord EXP Semicolon{functionFinished();}
 ;
 TYPE:
  IntKeyWord {strcpy($$,"int"); }
@@ -592,8 +609,9 @@ void yyerror(const char *s) {
 int main(int argc, char *argv[])
 {
 	yyin = fopen(argv[1], "r");
-	f1=fopen("output.asm","w");
-	pb.push_back("");
+	f1=fopen("output.mips","w");
+	if(argc>2 && strcmp("--show",argv[2])==0)
+		verbose=1;
 
     if(!yyparse())
 		printf("\nParsing complete\n");
@@ -603,24 +621,27 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 	if(PC!=0)
-		pb[0]="j main";
+		pb[pop()]="j main";
 	else{
 		printf("main function Not Found!\n");
 		exit(-4);
 	}
 	printf("MIPS CODE is saves in output file!\n");
+	if(verbose)
+		printf("Code:\n");
 	for(int j=0;j<pb.size();j++)
 	{
 		fprintf(f1,"%s\n",pb[j].c_str());
-		//printf("%s\n",pb[j].c_str());
+		if(verbose)
+			printf("%s\n",pb[j].c_str());
 	}
     fprintf(f1,"\n");
     
 	fclose(yyin);
 	fclose(f1);
-	cout<<"symbol table"<<endl;
+	cout<<"symbol table:"<<endl;
     map<string,Node>::iterator it = symbolTable.begin();
-    cout<<"name\tType\taddress\tscope\t#"<<endl;
+    cout<<"name\tType\t\taddress\tscope\t#"<<endl;
 	while(it != symbolTable.end())
     { 
 		cout<<it->first<<"\t";

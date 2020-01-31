@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/compiler",
-            "args": ["test.c","test.c"],
+            "args": ["test.c","--show"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
