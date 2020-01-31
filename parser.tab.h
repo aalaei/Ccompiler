@@ -88,8 +88,9 @@ union YYSTYPE
 
 	int iVal;
 	char name[100];
+	long long address;
 
-#line 93 "parser.tab.h" /* yacc.c:1909  */
+#line 94 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -1,14 +1,16 @@
-int a;
-int x()
+int ali,reza;
+int x(a,b)
 {
-    return 1;
+    return a+b;
 }
 int main()
 {
 
-    int a;
-    int sefse2b;
-    x();
-    return 2*5+4;
+   // int a;
+    int b;
+    b=8;
+    b=b+1;
+    b=x(b,-1);
+    return 2*b;
 
 }

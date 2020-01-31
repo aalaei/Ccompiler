@@ -25,6 +25,7 @@
 %union{
 	int iVal;
 	char name[100];
+	long long address;
 }
 %token <iVal> NUM
 %token <name> ifKeyWord
@@ -61,24 +62,24 @@
 %token <name> ID
 
 %type <name> STMT_DECLARE PGM TYPE
-%type <name> STMT STMTS STMT_FUNCTIONCALL matched unmatched other_statement
+%type <name> STMT STMTS matched unmatched other_statement
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
 
 
-%type <iVal> EXP
-%type <iVal> TERM
-%type <iVal> FACTOR
-%type <iVal> TERM2
-%type <iVal> TERM3
-%type <iVal> TERM4
-%type <iVal> TERM5
-%type <iVal> TERM6
-%type <iVal> TERM7
-%type <iVal> TERM8
-%type <iVal> TERM9
+%type <address> EXP 
+%type <address> EXP_FUNCTIONCALL
+%type <address> TERM
+%type <address> FACTOR
+%type <address> TERM2
+%type <address> TERM3
+%type <address> TERM4
+%type <address> TERM5
+%type <address> TERM6
+%type <address> TERM7
+%type <address> TERM8
+%type <address> TERM9
 
-%type <name> VAL;
 
 //%token FLOAT VARIABLE INTEGER expSym logSym sqrtSym
 
@@ -89,24 +90,24 @@
 
 %%
 PROGRAM:
- STMT_DECLARE PGM 
+ STMT_DECLARE {makeGolobal(); } PGM 
  ;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
  	 {declare_Function($2,0,$1);}
-	  OpenBrace STMTS CloseBrace PGM |
+	  OpenBrace STMTS CloseBrace{ functionFinished();} PGM |
  TYPE ID OpenParenthesis ID CloseParenthesis {}
  	 {declare_Function($2,1,$1);}
-	  OpenBrace STMTS CloseBrace PGM |
+	  OpenBrace STMTS CloseBrace{ functionFinished();} PGM |
  TYPE ID OpenParenthesis ID Comma ID CloseParenthesis {}
- 	 {declare_Function($2,1,$1);}
-	  OpenBrace STMTS CloseBrace PGM |
+ 	 {declare_Function($2,2,$1);}
+	  OpenBrace STMTS CloseBrace{ functionFinished();}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis {}
- 	 {declare_Function($2,1,$1);}
-	  OpenBrace STMTS CloseBrace PGM |
+ 	 {declare_Function($2,3,$1);}
+	  OpenBrace STMTS CloseBrace { functionFinished();}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis {}
- 	 {declare_Function($2,1,$1);}
-	  OpenBrace STMTS CloseBrace PGM |
+ 	 {declare_Function($2,4,$1);}
+	  OpenBrace STMTS CloseBrace { functionFinished();}PGM |
   /*nothing!*/{}
  ;
 STMTS:
@@ -120,7 +121,6 @@ other_statement:
  STMT_DECLARE | 
  STMT_ASSIGN |
  STMT_RETURN|
- STMT_FUNCTIONCALL|
  Semicolon{semantic_stack.top();}
 ;
 /*
@@ -142,18 +142,14 @@ unmatched:
   ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
   |ifKeyWord OpenParenthesis EXP CloseParenthesis matched elseKeyWord unmatched
 ;
-VAL:
-	EXP {}
-	|ID {}
 EXP:
- /*ID OperatorAssign EXP{ $$ = $3 ;}
- |*/ TERM9
+  TERM9 {$$ = ($1);}
 ;
 
 TERM9:
- TERM8 BinaryOR TERM8 // {$$ = ($1)||($3);}
+ TERM8 BinaryOR TERM8 
   {
-	 					 
+	//$$ = ($1)||($3);	 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -176,13 +172,13 @@ TERM9:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM8
+ | TERM8 {$$ = ($1);}
 ;
 
 TERM8:
- TERM7 BinaryAnd TERM7 //{$$ = ($1)&&($3);}
+ TERM7 BinaryAnd TERM7
  {
-	 					 
+	//$$ = ($1)&&($3);	 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -209,12 +205,12 @@ TERM8:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM7
+ | TERM7 {$$ = ($1);}
 ;
 TERM7:
- TERM6 OperatorOR TERM6 // {$$ = ($1)|($3);}
+ TERM6 OperatorOR TERM6
   {
-	 					 
+	//$$ = ($1) | ($3); 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -228,14 +224,14 @@ TERM7:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | TERM6
+ | TERM6 {$$ = ($1);}
  
 ;
 
 TERM6:
- TERM5 OperatorXOR TERM5 // {$$ = ($1)^($3);}
+ TERM5 OperatorXOR TERM5
   {
-	 					 
+	//$$ = ($1)^($3); 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -249,12 +245,12 @@ TERM6:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | TERM5
+ | TERM5 {$$ = ($1);}
 ;
 TERM5:
- TERM4 OperatorAnd TERM4 // {$$ = ($1)&($3);}
+ TERM4 OperatorAnd TERM4
  {
-	 					 
+	//$$ = ($1)&($3); 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -268,13 +264,13 @@ TERM5:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | TERM4
+ | TERM4 {$$ = ($1);}
 ;
 
 TERM4:
- TERM3 OperatorEqual TERM3 // {$$ = ($1)==($3);}
+ TERM3 OperatorEqual TERM3 
  {
-	 					 
+	//$$ = ($1)==($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -294,9 +290,9 @@ TERM4:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM3 OperatorNotEqual TERM3 // {$$ = ($1)!=($3);}
+ | TERM3 OperatorNotEqual TERM3
   {
-	 					 
+	//$$ = ($1)!=($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -316,13 +312,13 @@ TERM4:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- |TERM3
+ |TERM3 {$$= ($1);}
 ;
 
 TERM3:
- TERM2 OperatorSmall TERM2 //{$$ = ($1)<($3);}
+ TERM2 OperatorSmall TERM2
  {							//    s1 < s0
-	 					 
+	//$$ = ($1)<($3); 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -343,10 +339,10 @@ TERM3:
 	
  }
 	 
- | TERM2 OperatorSmallEqual TERM2 // {$$ = ($1)<=($3);}
+ | TERM2 OperatorSmallEqual TERM2
  {								//          s1  > s0 => false
 								//          s0  < s1 => false
-	 					 
+    //$$ = ($1)<=($3);	 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -366,10 +362,10 @@ TERM3:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM2 OperatorBig TERM2 // {$$ = ($1)>($3);}
+ | TERM2 OperatorBig TERM2
   {						   // 		 s1 > s0
   						   // 		 s0 < s1
-	 					 
+    //$$ = ($1)>($3);	 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -389,10 +385,10 @@ TERM3:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM2 OperatorBigEqual TERM2 //   {$$ = ($1)>=($3);}
+ | TERM2 OperatorBigEqual TERM2
  {								//          s1  < s0 => false
 								 
-	 					 
+	//$$ = ($1)>=($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -412,14 +408,14 @@ TERM3:
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
- | TERM2
+ | TERM2 {$$ = ($1);}
  
 ;
  
 TERM2:
- TERM OperatorAdd TERM // { $$ = ($1) + ($3); }
+ TERM OperatorAdd TERM
   {
-	 					 
+	$$ = ($1) + ($3); 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -433,9 +429,9 @@ TERM2:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | TERM OperatorMinus TERM // { $$ = ($1) - ($3); }
+ | TERM OperatorMinus TERM
   {								//    s1     s0
-	 					 
+	$$ = ($1) - ($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -449,13 +445,13 @@ TERM2:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | TERM
+ | TERM {$$= ($1);}
 ;
  
 TERM:
- FACTOR OperatorMult FACTOR //{ $$ = ($1) * ($3); }
+ FACTOR OperatorMult FACTOR
  {								//    s1     s0
-	 					 
+	$$ = ($1) * ($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -469,9 +465,15 @@ TERM:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | FACTOR OperatorDiv FACTOR // { $$ = ($1) / ($3); }
+ | FACTOR OperatorDiv FACTOR
  {								  //    s1     s0
-	 					 
+
+	if($3==0)
+	{
+		printf("divide by zero error!!\n");
+		exit(-100);
+	}
+ 	$$ = ($1) / ($3);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -487,24 +489,24 @@ TERM:
 	pb.push_back("sw $s2,0($sp)"); 
 	
  }
- | FACTOR
+ | FACTOR {$$ = ($1);}
 ;
 FACTOR:
  NUM {
+	 $$ = $1;
 	 char tmp[500];
 	 sprintf(tmp,"movl $%d, %%eax",$1);
 	 pb.push_back(string(tmp));
 	 pb.push_back("push %eax");
 	 }
- | OperatorMinus FACTOR // { $$ = -($2); }
+ | OperatorMinus FACTOR
    {								//   
-	 					 
+    $$ = -($2);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
 						 
 	pb.push_back("li $1,-1"); 
-	
 	
 	
 	pb.push_back("mul $s2,$s1,$s0"); 
@@ -513,9 +515,9 @@ FACTOR:
 	pb.push_back("sw $s2,0($sp)"); 
 	
    }
-   | UnaryNot FACTOR //{ $$ = ~($2); }
+   | UnaryNot FACTOR
    {								//   
-	 					 
+	$$ = ~($2);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -527,9 +529,9 @@ FACTOR:
 	pb.push_back("sw $s2,0($sp)"); 
 	
     }
-    | BinaryNot FACTOR //{ $$ = !($2); }
+    | BinaryNot FACTOR
     {								//   
-	 					 
+	$$ = !($2);
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
@@ -547,20 +549,23 @@ FACTOR:
 	pb.push_back("sw $s2,0($sp)"); 
 	
     }
-    | OpenParenthesis EXP CloseParenthesis //{ $$ = $2; }
+    | OpenParenthesis EXP CloseParenthesis
 	 {
+		$$ = $2;
 		 //not thing
 	 }
+	| ID {$$=123;}
+	| EXP_FUNCTIONCALL{};
 ;
 STMT_DECLARE:
  IntKeyWord ID {declare_IntVariable($2);} IDS
 ;
-STMT_FUNCTIONCALL:
- ID OpenParenthesis  CloseParenthesis Semicolon {functionCall($1,0);}
- | ID OpenParenthesis VAL CloseParenthesis Semicolon {functionCall($1,1,$3);}
- | ID OpenParenthesis VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,2,$3,$5);}
- | ID OpenParenthesis VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,3,$3,$5,$7);}
- | ID OpenParenthesis VAL Comma VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,4,$3,$5,$7,$9);}
+EXP_FUNCTIONCALL:
+ ID OpenParenthesis  CloseParenthesis {$$=functionCall($1,0);}
+ | ID OpenParenthesis EXP CloseParenthesis {$$=functionCall($1,1,$3);}
+ | ID OpenParenthesis EXP Comma EXP CloseParenthesis  {$$=functionCall($1,2,$3,$5);}
+ | ID OpenParenthesis EXP Comma EXP Comma EXP CloseParenthesis  {$$=functionCall($1,3,$3,$5,$7);}
+ | ID OpenParenthesis EXP Comma EXP Comma EXP Comma EXP CloseParenthesis  {$$=functionCall($1,4,$3,$5,$7,$9);}
  
 ;
 IDS:
@@ -568,13 +573,8 @@ IDS:
  Comma ID {declare_IntVariable($2);} IDS
 ;
 STMT_ASSIGN:
- ID OperatorAssign EXP Semicolon {}
- |ID OperatorAssign ID Semicolon {}
- |ID OperatorAssign ID OpenParenthesis CloseParenthesis Semicolon {functionCall($3,0);}
- |ID OperatorAssign ID OpenParenthesis VAL CloseParenthesis Semicolon {functionCall($3,1,$5);}
- |ID OperatorAssign ID OpenParenthesis VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,2,$5,$7);}
- |ID OperatorAssign ID OpenParenthesis VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,3,$5,$7,$9);}
- |ID OperatorAssign ID OpenParenthesis VAL Comma VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,4,$5,$7,$9,$11);}
+ ID OperatorAssign EXP Semicolon { assignto($1);}
+ | EXP Semicolon {}
 ;
 STMT_RETURN:
  returnKeyWord EXP Semicolon{pb.push_back("ret");}
@@ -592,7 +592,8 @@ void yyerror(const char *s) {
 int main(int argc, char *argv[])
 {
 	yyin = fopen(argv[1], "r");
-	f1=fopen("output","w");
+	f1=fopen("output.asm","w");
+	pb.push_back("");
 
     if(!yyparse())
 		printf("\nParsing complete\n");
@@ -600,6 +601,12 @@ int main(int argc, char *argv[])
 	{
 		printf("\nParsing failed\n");
 		exit(-1);
+	}
+	if(PC!=0)
+		pb[0]="j main";
+	else{
+		printf("main function Not Found!\n");
+		exit(-4);
 	}
 	printf("MIPS CODE is saves in output file!\n");
 	for(int j=0;j<pb.size();j++)
@@ -611,5 +618,17 @@ int main(int argc, char *argv[])
     
 	fclose(yyin);
 	fclose(f1);
+	cout<<"symbol table"<<endl;
+    map<string,Node>::iterator it = symbolTable.begin();
+    cout<<"name\tType\taddress\tscope\t#"<<endl;
+	while(it != symbolTable.end())
+    { 
+		cout<<it->first<<"\t";
+		it->second.print();
+		cout<<endl;
+        it++;
+    }
+	cout<<"PC is: "<<PC<<endl;
+	
     return 0;
 }

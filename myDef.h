@@ -24,6 +24,10 @@ public:
     long long address;
     int scope;
     int numOfArguments;
+    void print()
+    {
+        cout <<TYPE<<"\t"<< address <<"\t" <<scope <<"\t"<< numOfArguments;
+    }
 };
 map<string,Node> symbolTable;
 int i=0;
@@ -59,7 +63,8 @@ bool declare_Function(string name,int numOfArguments,string type)
 {
     
     Node tmp=Node();
-    tmp.address=getFree();
+    //tmp.address=getFree();
+    tmp.address=pb.size()+1;
     tmp.scope=1;
     if(name=="main")
     {
@@ -72,11 +77,13 @@ bool declare_Function(string name,int numOfArguments,string type)
     else return false;
     tmp.numOfArguments=numOfArguments;
     symbolTable[name]=tmp;
+    pb.push_back(name+": push %ebp");
+    pb.push_back("mov %esp,%ebp");
     return true;
 }
-void functionCall(string name,int numOfArgs,string ID1="",string ID2="",string ID3="",string ID4="")
+int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,int  arg3=0)
 {
-    string IDS[4]={ID1,ID2,ID3,ID4};
+    int args[4]={arg0,arg1,arg2,arg3};
     char tmp[500];
     
 	  if(symbolTable[name].TYPE<2)
@@ -93,12 +100,48 @@ void functionCall(string name,int numOfArgs,string ID1="",string ID2="",string I
 	  }
       for(int i=0;i<numOfArgs;i++)
       {
-        sprintf(tmp,"push %llu",symbolTable[IDS[i]].address);
+        sprintf(tmp,"lw $t0, 0(%d)",args[i]);
+        
+        pb.push_back(tmp);
+        sprintf(tmp,"movl $t0,$a%d",i);
         pb.push_back(tmp);
       }
-	  sprintf(tmp,"cal %llu",symbolTable[name].address);
-      pb.push_back(tmp);
+	  //sprintf(tmp,"jalr %llu",symbolTable[name].address);
+      pb.push_back("jal "+name);
+      pb.push_back("push res");
 	  
+}
+void assignto(string ID)
+{
+    char tmp[500];
+    Node var=symbolTable[ID];
+    if(var.TYPE != SEM_TYPE_VARIABLE_INT)
+    {
+        printf("variable has not been declared properly!\n");
+        exit(-10);
+    }
+    pb.push_back("lw $s0, 0($sp)"); 
+
+    sprintf(tmp,"sw $s0, 0($%llu)",var.address);
+    pb.push_back(tmp); 
+
+}
+void makeGolobal()
+{
+    map<string,Node>::iterator it = symbolTable.begin();
+	while(it != symbolTable.end())
+    { 
+		if(it->second.TYPE == SEM_TYPE_VARIABLE_INT)
+            it->second.scope=0;
+        it++;
+    }
+	
+}
+void functionFinished()
+{
+    pb.push_back("mov %ebp, %esp");
+    pb.push_back("pop %ebp");
+    pb.push_back("ret");
 }
 //end
 #endif
