@@ -63,7 +63,7 @@
 %token <name> ID
 
 %type <name> STMT_DECLARE PGM TYPE
-%type <name> STMT STMTS matched unmatched other_statement
+%type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
 
@@ -134,15 +134,23 @@ STMT_CONDITIONAL:
 ;
 */
 matched:
-  ifKeyWord OpenParenthesis EXP CloseParenthesis matched elseKeyWord matched
+   IF_ELSE matched{jump();}
   | other_statement
 ;
 
-
 unmatched:
-  ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
-  |ifKeyWord OpenParenthesis EXP CloseParenthesis matched elseKeyWord unmatched
+  IF STMT {
+	  pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);
+  }
+  |IF_ELSE unmatched{jump();}
 ;
+IF_ELSE:
+	IF matched elseKeyWord {saveJump();}
+;
+IF:
+	ifKeyWord OpenParenthesis EXP CloseParenthesis {save();}
+;
+
 EXP:
   TERM9 {$$ = ($1);}
 ;

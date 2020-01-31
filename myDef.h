@@ -93,7 +93,7 @@ bool declare_Function(string name,int numOfArguments,string type)
     tmp.numOfArguments=numOfArguments;
     symbolTable[name]=tmp;
 
-    pb.push_back("addi $sp, $sp,-4"); 
+    pb.push_back(name+": addi $sp, $sp,-4"); 
 	pb.push_back("sw %ebp,0($sp)"); 
     pb.push_back("movl %esp,%ebp");
     return true;
@@ -172,6 +172,27 @@ void functionFinished()
 	pb.push_back("addi $sp, $sp,4"); 
 
     pb.push_back("ret");
+}
+
+void save(){
+    pb.push_back("lw $s0, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4"); 
+    push(pb.size());
+    pb.push_back("");
+}
+void jump()
+{
+    pb[pop()]="j "+ to_string(pb.size()+1);    
+}
+void saveJump()
+{
+    int top=pop();
+    //int top_1=pop();
+    
+    pb[top]="be $s0,$zero, "+to_string(pb.size()+2);
+    push(pb.size());
+    pb.push_back("");
+
 }
 //end
 #endif
