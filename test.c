@@ -1,10 +1,14 @@
 int a;
+int x()
+{
+    return 1;
+}
 int main()
 {
 
     int a;
-    int sefseb;
-    a = 2;
-    return 5*4;
+    int sefse2b;
+    x();
+    return 2*5+4;
 
 }

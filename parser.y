@@ -1,13 +1,9 @@
 
 %{
- #include <stdio.h>
- #include <stdlib.h>
- #include <string.h>
- #include <math.h>
+ 
  #include <iostream> 
  
- #include <stack> 
- #include <vector>
+
  using namespace std;
  static long long Cur_Mem_tmp=100;
  
@@ -19,6 +15,8 @@
  
  int yylineNum=0;
  FILE* f1;
+
+ extern long long PC; 
 
  int yyparse();
 	
@@ -63,7 +61,7 @@
 %token <name> ID
 
 %type <name> STMT_DECLARE PGM TYPE
-%type <name> STMT STMTS STMT_CONDITIONAL
+%type <name> STMT STMTS STMT_FUNCTIONCALL matched unmatched other_statement
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
 
@@ -80,6 +78,8 @@
 %type <iVal> TERM8
 %type <iVal> TERM9
 
+%type <name> VAL;
+
 //%token FLOAT VARIABLE INTEGER expSym logSym sqrtSym
 
 
@@ -92,23 +92,59 @@ PROGRAM:
  STMT_DECLARE PGM 
  ;
 PGM:
- TYPE ID OpenParenthesis CloseParenthesis OpenBrace STMTS CloseBrace PGM |
+ TYPE ID OpenParenthesis CloseParenthesis 
+ 	 {declare_Function($2,0,$1);}
+	  OpenBrace STMTS CloseBrace PGM |
+ TYPE ID OpenParenthesis ID CloseParenthesis {}
+ 	 {declare_Function($2,1,$1);}
+	  OpenBrace STMTS CloseBrace PGM |
+ TYPE ID OpenParenthesis ID Comma ID CloseParenthesis {}
+ 	 {declare_Function($2,1,$1);}
+	  OpenBrace STMTS CloseBrace PGM |
+ TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis {}
+ 	 {declare_Function($2,1,$1);}
+	  OpenBrace STMTS CloseBrace PGM |
+ TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis {}
+ 	 {declare_Function($2,1,$1);}
+	  OpenBrace STMTS CloseBrace PGM |
   /*nothing!*/{}
  ;
 STMTS:
  STMT STMTS | {}
  ;
 STMT:
+ matched
+ | unmatched
+;
+other_statement:
  STMT_DECLARE | 
  STMT_ASSIGN |
  STMT_RETURN|
- STMT_CONDITIONAL|
+ STMT_FUNCTIONCALL|
  Semicolon{semantic_stack.top();}
 ;
+/*
 STMT_CONDITIONAL:
+
  ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
  | ifKeyWord OpenParenthesis EXP CloseParenthesis STMT elseKeyWord  STMT
+ matched
+ | unmatched
 ;
+*/
+matched:
+  ifKeyWord OpenParenthesis EXP CloseParenthesis matched elseKeyWord matched
+  | other_statement
+;
+
+
+unmatched:
+  ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
+  |ifKeyWord OpenParenthesis EXP CloseParenthesis matched elseKeyWord unmatched
+;
+VAL:
+	EXP {}
+	|ID {}
 EXP:
  /*ID OperatorAssign EXP{ $$ = $3 ;}
  |*/ TERM9
@@ -454,9 +490,14 @@ TERM:
  | FACTOR
 ;
 FACTOR:
- NUM
+ NUM {
+	 char tmp[500];
+	 sprintf(tmp,"movl $%d, %%eax",$1);
+	 pb.push_back(string(tmp));
+	 pb.push_back("push %eax");
+	 }
  | OperatorMinus FACTOR // { $$ = -($2); }
- {								//   
+   {								//   
 	 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
@@ -471,9 +512,9 @@ FACTOR:
 	pb.push_back("addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	
- }
- | UnaryNot FACTOR //{ $$ = ~($2); }
- {								//   
+   }
+   | UnaryNot FACTOR //{ $$ = ~($2); }
+   {								//   
 	 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
@@ -485,9 +526,9 @@ FACTOR:
 	pb.push_back("addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	
- }
- | BinaryNot FACTOR //{ $$ = !($2); }
- {								//   
+    }
+    | BinaryNot FACTOR //{ $$ = !($2); }
+    {								//   
 	 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
@@ -505,28 +546,42 @@ FACTOR:
 	pb.push_back("BinaryNot_save: addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	
- }
- | OpenParenthesis EXP CloseParenthesis //{ $$ = $2; }
+    }
+    | OpenParenthesis EXP CloseParenthesis //{ $$ = $2; }
 	 {
 		 //not thing
 	 }
 ;
 STMT_DECLARE:
- TYPE ID IDS
+ IntKeyWord ID {declare_IntVariable($2);} IDS
+;
+STMT_FUNCTIONCALL:
+ ID OpenParenthesis  CloseParenthesis Semicolon {functionCall($1,0);}
+ | ID OpenParenthesis VAL CloseParenthesis Semicolon {functionCall($1,1,$3);}
+ | ID OpenParenthesis VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,2,$3,$5);}
+ | ID OpenParenthesis VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,3,$3,$5,$7);}
+ | ID OpenParenthesis VAL Comma VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($1,4,$3,$5,$7,$9);}
+ 
 ;
 IDS:
  Semicolon |
- Comma ID IDS
+ Comma ID {declare_IntVariable($2);} IDS
 ;
 STMT_ASSIGN:
- ID OperatorAssign EXP Semicolon
+ ID OperatorAssign EXP Semicolon {}
+ |ID OperatorAssign ID Semicolon {}
+ |ID OperatorAssign ID OpenParenthesis CloseParenthesis Semicolon {functionCall($3,0);}
+ |ID OperatorAssign ID OpenParenthesis VAL CloseParenthesis Semicolon {functionCall($3,1,$5);}
+ |ID OperatorAssign ID OpenParenthesis VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,2,$5,$7);}
+ |ID OperatorAssign ID OpenParenthesis VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,3,$5,$7,$9);}
+ |ID OperatorAssign ID OpenParenthesis VAL Comma VAL Comma VAL Comma VAL CloseParenthesis Semicolon {functionCall($3,4,$5,$7,$9,$11);}
 ;
 STMT_RETURN:
- returnKeyWord EXP Semicolon
+ returnKeyWord EXP Semicolon{pb.push_back("ret");}
 ;
 TYPE:
- IntKeyWord |
- VoidKeyWord
+ IntKeyWord {strcpy($$,"int"); }
+ |VoidKeyWord {strcpy($$,"void");}
 ;
 %%
 
@@ -546,11 +601,11 @@ int main(int argc, char *argv[])
 		printf("\nParsing failed\n");
 		exit(-1);
 	}
-	printf("MIPS CODE:\n");
+	printf("MIPS CODE is saves in output file!\n");
 	for(int j=0;j<pb.size();j++)
 	{
 		fprintf(f1,"%s\n",pb[j].c_str());
-		printf("%s\n",pb[j].c_str());
+		//printf("%s\n",pb[j].c_str());
 	}
     fprintf(f1,"\n");
     

@@ -7,7 +7,7 @@ lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
 
 compiler: lex.yy.c parser.tab.c parser.tab.h
-	g++ -o compiler parser.tab.c lex.yy.c -lm
+	g++ -g -o compiler parser.tab.c lex.yy.c -lm
 
 clean:
 	rm compiler parser.tab.c lex.yy.c parser.tab.h

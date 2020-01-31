@@ -2,12 +2,13 @@
 %{
  #include "parser.tab.h"
  #include <stdlib.h>
-
+ extern int yylineNum;
  void yyerror(const char *);
  //%option c++
 %}
 numbers ([0-9])+
-alpha ([a-zA-Z])+
+alpha ([a-zA-Z])([a-zA-Z0-9]*)
+
 %%
 "if" {
     return ifKeyWord;
@@ -110,6 +111,10 @@ alpha ([a-zA-Z])+
 }
 
 [ \t] ; /* skip whitespace */
+"//".* ;
+[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       ;
+[/][*]                                    { yyerror("Unterminated comment"); }
+[\n] {yylineNum++;}
 . yyerror("Unknown character");
 %%
 int yywrap(void) {
