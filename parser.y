@@ -7,13 +7,22 @@
  using namespace std;
  static long long Cur_Mem_tmp=100;
  bool verbose;
+ int yylineNum=0;
+ string lastScope;
+
+ void yyerror(const char* error);
+ void error(const char * error)
+ {
+	 char temp[500];
+	 sprintf(temp,"error :\n\t%s\n> line number: #%d",error,yylineNum+1);
+	 yyerror(temp);
+ }
  #include "myDef.h"
  
  extern FILE* yyin;
  extern int yylex();
- void yyerror(const char* error);
  
- int yylineNum=0;
+ 
  FILE* f1;
 
  extern long long PC; 
@@ -69,17 +78,17 @@
 
 
 %type <address> EXP 
-%type <address> EXP_FUNCTIONCALL
-%type <address> TERM
-%type <address> FACTOR
-%type <address> TERM2
-%type <address> TERM3
-%type <address> TERM4
-%type <address> TERM5
-%type <address> TERM6
-%type <address> TERM7
-%type <address> TERM8
-%type <address> TERM9
+%type <iVal> EXP_FUNCTIONCALL
+%type <iVal> TERM
+%type <iVal> FACTOR
+%type <iVal> TERM2
+%type <iVal> TERM3
+%type <iVal> TERM4
+%type <iVal> TERM5
+%type <iVal> TERM6
+%type <iVal> TERM7
+%type <iVal> TERM8
+%type <iVal> TERM9
 
 
 //%token FLOAT VARIABLE INTEGER expSym logSym sqrtSym
@@ -96,19 +105,19 @@ PROGRAM:
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
  	 {declare_Function($2,0,$1);}
-	  OpenBrace STMTS CloseBrace{ functionFinished();} PGM |
- TYPE ID OpenParenthesis ID CloseParenthesis {}
- 	 {declare_Function($2,1,$1);}
-	  OpenBrace STMTS CloseBrace{ functionFinished();} PGM |
- TYPE ID OpenParenthesis ID Comma ID CloseParenthesis {}
- 	 {declare_Function($2,2,$1);}
-	  OpenBrace STMTS CloseBrace{ functionFinished();}PGM |
- TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis {}
- 	 {declare_Function($2,3,$1);}
-	  OpenBrace STMTS CloseBrace { functionFinished();}PGM |
- TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis {}
- 	 {declare_Function($2,4,$1);}
-	  OpenBrace STMTS CloseBrace { functionFinished();}PGM |
+	  OpenBrace STMTS CloseBrace{ functionFinished(0,$2);} PGM |
+ TYPE ID OpenParenthesis ID CloseParenthesis 
+ 	 {declare_Function($2,1,$1);}{fun_var($4,1);}
+	  OpenBrace STMTS CloseBrace{ functionFinished(1,$2);} PGM |
+ TYPE ID OpenParenthesis ID Comma ID CloseParenthesis 
+ 	 {declare_Function($2,2,$1);}{fun_var($4,1);fun_var($6,2);}
+	  OpenBrace STMTS CloseBrace{ functionFinished(2,$2);}PGM |
+ TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis 
+ 	 {declare_Function($2,3,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);}
+	  OpenBrace STMTS CloseBrace { functionFinished(3,$2);}PGM |
+ TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis 
+ 	 {declare_Function($2,4,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);fun_var($10,4);}
+	  OpenBrace STMTS CloseBrace { functionFinished(4,$2);}PGM |
   /*nothing!*/{}
  ;
 STMTS:
@@ -152,7 +161,18 @@ IF:
 ;
 
 EXP:
-  TERM9 {$$ = ($1);}
+  TERM9 {
+	  char tmp[500];
+	  $$ = ($1);
+	  
+      //$$=getFree();
+	  //pb.push_back("lw $s0,0($sp)");
+	  //pb.push_back("laddi $sp,$sp,4");
+	  //sprintf(tmp,"sw $s0,%llu($gp)",$$);
+	  //pb.push_back(tmp);
+
+	  
+	  }
 ;
 
 TERM9:
@@ -479,7 +499,7 @@ TERM:
 
 	if($3==0)
 	{
-		printf("divide by zero error!!\n");
+		error("divide by zero error!!");
 		exit(-100);
 	}
  	$$ = ($1) / ($3);
@@ -574,7 +594,7 @@ FACTOR:
 	{
 		$$ = 123; 
 		char temp[500];
-		sprintf(temp,"lw $s0,%llu($zero)",symbolTable[$1].address);
+		sprintf(temp,"lw $s0,%llu($gp)",symbolTable[$1].address);
 		pb.push_back(temp);
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
@@ -602,7 +622,7 @@ STMT_ASSIGN:
  | EXP Semicolon {}
 ;
 STMT_RETURN:
- returnKeyWord EXP Semicolon{functionFinished();}
+ returnKeyWord EXP Semicolon{returnHandle();}
 ;
 TYPE:
  IntKeyWord {strcpy($$,"int"); }
@@ -628,10 +648,16 @@ int main(int argc, char *argv[])
 		printf("\nParsing failed\n");
 		exit(-1);
 	}
+	int return_address;
 	if(PC!=0)
-		pb[pop()]="j main";
+	{
+		return_address=pop();
+		pb[return_address]="jal main";
+		pb[return_address+1]="li $v0, 10";
+		pb[return_address+2]="syscall";
+	}	
 	else{
-		printf("main function Not Found!\n");
+		error("main function Not Found!");
 		exit(-4);
 	}
 	printf("MIPS CODE is saves in output file!\n");
@@ -647,16 +673,7 @@ int main(int argc, char *argv[])
     
 	fclose(yyin);
 	fclose(f1);
-	cout<<"symbol table:"<<endl;
-    map<string,Node>::iterator it = symbolTable.begin();
-    cout<<"name\tType\t\taddress\tscope\t#"<<endl;
-	while(it != symbolTable.end())
-    { 
-		cout<<it->first<<"\t";
-		it->second.print();
-		cout<<endl;
-        it++;
-    }
+	symbolTableShow();
 	cout<<"PC is: "<<PC<<endl;
 	
     return 0;

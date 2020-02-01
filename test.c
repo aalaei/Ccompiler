@@ -1,21 +1,22 @@
 int ali,reza;
-/*
 int x(a,b)
 {
     return a+b;
 }
-*/
 int main()
 {
+//
 
-   // int a;
-    int b=8;
+//
+   // int b=7;
    // b=b+1;
-   // b=x(b,-1);
-   // return b/(4-3);
-   if(b<5)
+   // int a = b;
+    //return b/(4-3);
+   int a=18/x(2,-2);
+   
+   /*if(b<5)
     return 1;
-    else
+   else
     return -1;
-    
+  */
 }

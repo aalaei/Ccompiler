@@ -1,45 +1,54 @@
 .data:
-	ali: .word
-	reza: .word
 err_string: .asciiz "\ndivide by zero error!\n"
 .text:
-j main
-main: addi $sp, $sp,-4
-sw %ebp,0($sp)
-movl %esp,%ebp
-li $s0 , 8
-addi $sp,$sp,-4
-sw $s0,0($sp)
+jal main
+li $v0, 10
+syscall
+x: lw $a1,0($sp)
+addi $sp, $sp,4
+lw $a0,0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $ra,0($sp)
+addi $sp, $sp,-4
+sw $a0, 0($sp)
 lw $s0, 0($sp)
-sw $s0, 108($zero)
-lw $s0,108($zero)
+addi $sp,$sp,4
+sw $s0, 108($gp)
+addi $sp, $sp,-4
+sw $a1, 0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 112($gp)
+lw $s0,108($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
-li $s0 , 5
-addi $sp,$sp,-4
+lw $s0,112($gp)
+addi $sp, $sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
 lw $s1, 0($sp)
 addi $sp, $sp,4
-blt $s1, $s0,OperatorSmall_true
-li $s0, 0
-j OperatorSmall_write
-OperatorSmall_true: li $s0, 1
-OperatorSmall_write: addi $sp, $sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
+add $s2,$s1,$s0
+addi $sp, $sp,-4
+sw $s2,0($sp)
+lw $v0, 0($sp)
 addi $sp, $sp,4
-be $s0,$zero, 42
-li $s0 , 1
+lw $ra, 0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $v0, 0($sp)
+jr $ra
+main: addi $sp, $sp,-4
+sw $ra,0($sp)
+li $s0 , 18
 addi $sp,$sp,-4
 sw $s0,0($sp)
-movl %ebp, %esp
-lw %ebp, 0($sp)
-addi $sp, $sp,4
-ret
-j 55
-li $s0 , 1
+li $s0 , 2
+addi $sp,$sp,-4
+sw $s0,0($sp)
+li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
@@ -48,12 +57,28 @@ li $s1,-1
 mul $s2,$s1,$s0
 addi $sp, $sp,-4
 sw $s2,0($sp)
-movl %ebp, %esp
-lw %ebp, 0($sp)
+jal x
+lw $s0, 0($sp)
 addi $sp, $sp,4
-ret
-movl %ebp, %esp
-lw %ebp, 0($sp)
+bne $s0,$zero,skip
+li $v0,4
+la $a0,err_string
+syscall
+li $v0, 10
+syscall
+skip:lw $s1, 0($sp)
 addi $sp, $sp,4
-ret
+div $s1,$s0
+mflo $s2
+addi $sp, $sp,-4
+sw $s2,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 116($gp)
+li $v0,0
+lw $ra, 0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $v0, 0($sp)
+jr $ra
 
