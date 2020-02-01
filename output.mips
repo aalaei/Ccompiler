@@ -4,27 +4,33 @@ err_string: .asciiz "\ndivide by zero error!\n"
 jal main
 li $v0, 10
 syscall
-x: lw $a1,0($sp)
-addi $sp, $sp,4
-lw $a0,0($sp)
-addi $sp, $sp,4
-addi $sp, $sp,-4
+main: addi $sp, $sp,-4
 sw $ra,0($sp)
-addi $sp, $sp,-4
-sw $a0, 0($sp)
-lw $s0, 0($sp)
-addi $sp,$sp,4
-sw $s0, 108($gp)
-addi $sp, $sp,-4
-sw $a1, 0($sp)
-lw $s0, 0($sp)
-addi $sp,$sp,4
-sw $s0, 112($gp)
-lw $s0,108($gp)
-addi $sp, $sp,-4
-sw $s0,0($sp)
 lw $s0,112($gp)
 addi $sp, $sp,-4
+sw $s0,0($sp)
+li $s0 , 10
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp, $sp,4
+lw $s1, 0($sp)
+addi $sp, $sp,4
+blt $s1, $s0,OperatorSmall_true
+li $s0, 0
+j OperatorSmall_write
+OperatorSmall_true: li $s0, 1
+OperatorSmall_write: addi $sp, $sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp, $sp,4
+be $s0,$zero 53
+j 46
+lw $s0,112($gp)
+addi $sp, $sp,-4
+sw $s0,0($sp)
+li $s0 , 1
+addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
@@ -33,48 +39,17 @@ addi $sp, $sp,4
 add $s2,$s1,$s0
 addi $sp, $sp,-4
 sw $s2,0($sp)
-lw $v0, 0($sp)
-addi $sp, $sp,4
-lw $ra, 0($sp)
-addi $sp, $sp,4
-addi $sp, $sp,-4
-sw $v0, 0($sp)
-jr $ra
-main: addi $sp, $sp,-4
-sw $ra,0($sp)
-li $s0 , 18
-addi $sp,$sp,-4
-sw $s0,0($sp)
-li $s0 , 2
-addi $sp,$sp,-4
-sw $s0,0($sp)
-li $s0 , 2
-addi $sp,$sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-li $s1,-1
-mul $s2,$s1,$s0
-addi $sp, $sp,-4
-sw $s2,0($sp)
-jal x
-lw $s0, 0($sp)
-addi $sp, $sp,4
-bne $s0,$zero,skip
-li $v0,4
-la $a0,err_string
-syscall
-li $v0, 10
-syscall
-skip:lw $s1, 0($sp)
-addi $sp, $sp,4
-div $s1,$s0
-mflo $s2
-addi $sp, $sp,-4
-sw $s2,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
-sw $s0, 116($gp)
+sw $s0, 112($gp)
+j 9
+li $s0 , 2
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 108($gp)
+j 29
 li $v0,0
 lw $ra, 0($sp)
 addi $sp, $sp,4

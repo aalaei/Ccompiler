@@ -16,6 +16,12 @@ alpha ([a-zA-Z])([a-zA-Z0-9]*)
 "else" {
     return elseKeyWord;
 }
+"while" {
+    return whileKeyWord;
+}
+"for" {
+    return forKeyWord;
+}
 "return" {
     return returnKeyWord;
 }

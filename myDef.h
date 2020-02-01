@@ -227,7 +227,7 @@ void returnHandle()
 
     if(symbolTable[lastScope].TYPE==SEM_TYPE_FUNCTION_VOID)
     {
-        printf("warning void function can't return any value!(line #:%d)\n",yylineNum);
+        warning("warning void function can't return any value!");
         
     }else{
     pb.push_back("lw $v0, 0($sp)");    // pop to $v0
@@ -258,7 +258,8 @@ void functionFinished(int numberOfArguments,string ID)
         
         if(!symbolTable[ID].output)
         {
-            printf("warning return is missing (0 is considerd!)!(line #:%d)\n",yylineNum);
+
+            warning("warning return is missing (0 is considerd!)");
             pb.push_back("li $v0,0");
             
         }
@@ -282,11 +283,24 @@ void functionFinished(int numberOfArguments,string ID)
     pb.push_back("jr $ra");
 }
 
-void save(){
+void save()
+{
     pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
     push(pb.size());
     pb.push_back("");
+}
+void whileJump()
+{
+    pb[pop()]="be $s0,$zero "+to_string(pb.size()+2);
+    pb.push_back("j "+to_string(pop()+1));
+    //cout<<"EEE"<<pop()<<endl;
+}
+void forJump()
+{
+    int a=pop();
+    pb.push_back("j "+ to_string(a+3));
+    pb[a]="be $s0,$zero "+to_string(pb.size()+1);
 }
 void jump()
 {

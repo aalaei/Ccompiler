@@ -17,6 +17,11 @@
 	 sprintf(temp,"error :\n\t%s\n> line number: #%d",error,yylineNum+1);
 	 yyerror(temp);
  }
+ void warning(const char * warn)
+ {
+	 printf("warning :\n\t%s\n> line number: #%d",warn,yylineNum+1);
+ }
+ 
  #include "myDef.h"
  
  extern FILE* yyin;
@@ -40,6 +45,9 @@
 %token <iVal> NUM
 %token <name> ifKeyWord
 %token <name> elseKeyWord
+%token <name> whileKeyWord
+%token <name> forKeyWord
+
 %token <name> VoidKeyWord
 %token <name> IntKeyWord
 %token <name> returnKeyWord
@@ -71,8 +79,8 @@
 
 %token <name> ID
 
-%type <name> STMT_DECLARE PGM TYPE
-%type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE
+%type <name> STMT_DECLARE PGM TYPE STMT_WHILE STMT_FOR
+%type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE STMT_CONDITIONAL
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
 
@@ -131,17 +139,28 @@ other_statement:
  STMT_DECLARE | 
  STMT_ASSIGN |
  STMT_RETURN|
+ STMT_CONDITIONAL|
+ STMT_WHILE|
+ STMT_FOR|
  Semicolon{semantic_stack.top();}
 ;
-/*
+STMT_WHILE:
+ whileKeyWord OpenParenthesis{push(pb.size());} EXP CloseParenthesis {save();} OpenBrace STMTS CloseBrace {whileJump();}
+
+;
+STMT_FOR:
+ forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon {save();pb.push_back("");}STMT{int a=pop();pb[a+1]="j "+to_string(pb.size()+2);pb.push_back("j "+to_string(pop()+1));push(a);}  CloseParenthesis OpenBrace STMTS CloseBrace
+  {forJump();}
+
+;
+
 STMT_CONDITIONAL:
 
- ifKeyWord OpenParenthesis EXP CloseParenthesis STMT
- | ifKeyWord OpenParenthesis EXP CloseParenthesis STMT elseKeyWord  STMT
- matched
- | unmatched
+ IF OpenBrace STMTS CloseBrace {pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);}
+ | IF OpenBrace STMTS CloseBrace elseKeyWord {saveJump();} OpenBrace STMTS CloseBrace{saveJump();}
+ 
 ;
-*/
+
 matched:
    IF_ELSE matched{jump();}
   | other_statement
@@ -619,7 +638,7 @@ IDS:
 ;
 STMT_ASSIGN:
  ID OperatorAssign EXP Semicolon { assignto($1);}
- | EXP Semicolon {}
+ | EXP Semicolon {pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");warning("useless epression!");} // pop use less result!!
 ;
 STMT_RETURN:
  returnKeyWord EXP Semicolon{returnHandle();}
