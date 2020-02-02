@@ -11,6 +11,7 @@
  int out;
  int yylineNum=0;
  string lastScope;
+ int labelCnt=0;
 
  void yyerror(const char* error);
  void error(const char * error)
@@ -160,14 +161,27 @@ ONLY_ONE_STMT:
  | {pb.push_back("NOP");}
 ;
 STMT_FOR:
- forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon {save();pb.push_back("");}ONLY_ONE_STMT{int a=pop();pb[a+1]="j "+to_string(pb.size()+2);pb.push_back("j "+to_string(pop()+1));push(a);}  CloseParenthesis OpenBrace STMTS CloseBrace
+ forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon 
+ {	
+	 save();
+	 pb.push_back("");
+ }ONLY_ONE_STMT
+ {	
+	 int a=pop();
+	 pb[a+1]="j a"+to_string(pb.size()+2);
+	 instJump.push(pb.size()+2);
+	 int b=pop()+1;
+	 pb.push_back("j a"+to_string(b));
+	 instJump.push(b);
+	 push(a);
+  }  CloseParenthesis OpenBrace STMTS CloseBrace
   {forJump();}
 
 ;
 /*
 STMT_CONDITIONAL:
 
- IF OpenBrace STMTS CloseBrace {pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);}
+ IF OpenBrace STMTS CloseBrace {pb[pop()]="beq $s0,$zero, a"+to_string(pb.size()+1);instJump.push(pb.size()+1);}
  | IF OpenBrace STMTS CloseBrace elseKeyWord {saveJump();} OpenBrace STMTS CloseBrace{saveJump();}
  
 ;
@@ -179,10 +193,12 @@ matched:
 
 unmatched:
   IF STMT {
-	  pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);
+	  pb[pop()]="beq $s0,$zero, a"+to_string(pb.size()+1);
+	  instJump.push(pb.size()+1);
   }
   |IF BLOCK{
-	  pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);
+	  pb[pop()]="beq $s0,$zero, a"+to_string(pb.size()+1);
+	  instJump.push(pb.size()+1);
   }
   |IF_ELSE unmatched{jump();}
   |IF_ELSE BLOCK {jump();}
@@ -220,22 +236,22 @@ TERM9:
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bne $s0,$zero,BinaryOR_True"); //age sefr nabood boro be true
+	pb.push_back("bne $s0,$zero,BinaryOR_True"+to_string(labelCnt)); //age sefr nabood boro be true
 	
 						 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bne $s0,$zero,BinaryOR_True"); //age sefr nabood boro be true
+	pb.push_back("bne $s0,$zero,BinaryOR_True"+to_string(labelCnt)); //age sefr nabood boro be true
 	//age false shod
 	pb.push_back("li $s0,0");  
-	pb.push_back("j BinaryOR_write");  
+	pb.push_back("j BinaryOR_write"+to_string(labelCnt));  
 	
 	//age true shod
-	pb.push_back("BinaryOR_True: li $s0,1");  
+	pb.push_back("BinaryOR_True"+to_string(labelCnt)+": li $s0,1");  
 	 
 	 
-	pb.push_back("BinaryOR_write: addi $sp, $sp,-4"); 
+	pb.push_back("BinaryOR_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -249,26 +265,26 @@ TERM8:
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"+to_string(labelCnt)); //age sefr bood boro be false
 	
 	
 		 					 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("beq $s0,$zero,BinaryAnd_False"); //age sefr bood boro be false
+	pb.push_back("beq $s0,$zero,BinaryAnd_False"+to_string(labelCnt)); //age sefr bood boro be false
 	
 	//age hardo sefr naboodan yani javab true mishod					 
 	
 	 
 	pb.push_back("li $s0,1");  
-	pb.push_back("j BinaryAnd_write");  
+	pb.push_back("j BinaryAnd_write"+to_string(labelCnt));  
 	
 	//age true shod
-	pb.push_back("BinaryAnd_False: li $s0,0");  
+	pb.push_back("BinaryAnd_False"+to_string(labelCnt)+": li $s0,0");  
 	 
 	 
-	pb.push_back("BinaryAnd_write: addi $sp, $sp,-4"); 
+	pb.push_back("BinaryAnd_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -345,15 +361,15 @@ TERM4:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("beq $s0,$s1,OperatorEqual_true"); 
+	pb.push_back("beq $s0,$s1,OperatorEqual_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
-	pb.push_back("j OperatorEqual_write"); 
+	pb.push_back("j OperatorEqual_write"+to_string(labelCnt)); 
 	
 	//true bood
-	pb.push_back("OperatorEqual_true: li $s0, 1"); 
-	pb.push_back("OperatorEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorEqual_true"+to_string(labelCnt)+": li $s0, 1"); 
+	pb.push_back("OperatorEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -367,15 +383,15 @@ TERM4:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bnq $s0,$s1,OperatorNotEqual_true"); 
+	pb.push_back("bnq $s0,$s1,OperatorNotEqual_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
-	pb.push_back("j OperatorNotEqual_write"); 
+	pb.push_back("j OperatorNotEqual_write"+to_string(labelCnt)); 
 	
 	//true bood
-	pb.push_back("OperatorNotEqual_true: li $s0, 1"); 
-	pb.push_back("OperatorNotEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorNotEqual_true"+to_string(labelCnt)+": li $s0, 1"); 
+	pb.push_back("OperatorNotEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -393,15 +409,15 @@ TERM3:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
-	pb.push_back("blt $s1, $s0,OperatorSmall_true"); 
+	pb.push_back("blt $s1, $s0,OperatorSmall_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
-	pb.push_back("j OperatorSmall_write"); 
+	pb.push_back("j OperatorSmall_write"+to_string(labelCnt)); 
 	
 	//true bood
-	pb.push_back("OperatorSmall_true: li $s0, 1"); 
-	pb.push_back("OperatorSmall_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorSmall_true"+to_string(labelCnt)+": li $s0, 1"); 
+	pb.push_back("OperatorSmall_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -417,15 +433,15 @@ TERM3:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
-	pb.push_back("blt $s0, $s1,OperatorSmallEqual_false"); 
+	pb.push_back("blt $s0, $s1,OperatorSmallEqual_false"+to_string(labelCnt)); 
 	
 	//age true bood
 	pb.push_back("li $s0, 1"); 
-	pb.push_back("j OperatorSmallEqual_write"); 
+	pb.push_back("j OperatorSmallEqual_write"+to_string(labelCnt)); 
 	
 	//false bood
-	pb.push_back("OperatorSmallEqual_false: li $s0, 0"); 
-	pb.push_back("OperatorSmallEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorSmallEqual_false"+to_string(labelCnt)+": li $s0, 0"); 
+	pb.push_back("OperatorSmallEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -440,15 +456,15 @@ TERM3:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
-	pb.push_back("blt $s0, $s1,OperatorBig_true"); 
+	pb.push_back("blt $s0, $s1,OperatorBig_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
-	pb.push_back("j OperatorBig_write"); 
+	pb.push_back("j OperatorBig_write"+to_string(labelCnt)); 
 	
 	//true bood
-	pb.push_back("OperatorBig_true: li $s0, 1"); 
-	pb.push_back("OperatorBig_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorBig_true"+to_string(labelCnt)+": li $s0, 1"); 
+	pb.push_back("OperatorBig_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -467,11 +483,11 @@ TERM3:
 	
 	//age true bood
 	pb.push_back("li $s0, 1"); 
-	pb.push_back("j OperatorBigEqual_write"); 
+	pb.push_back("j OperatorBigEqual_write"+to_string(labelCnt)); 
 	
 	//false bood
-	pb.push_back("OperatorBigEqual_false: li $s0, 0"); 
-	pb.push_back("OperatorBigEqual_write: addi $sp, $sp,-4"); 
+	pb.push_back("OperatorBigEqual_false"+to_string(labelCnt)+": li $s0, 0"); 
+	pb.push_back("OperatorBigEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
 	
  }
@@ -544,13 +560,13 @@ TERM:
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bne $s0,$zero,skip");
+	pb.push_back("bne $s0,$zero,skip"+to_string(labelCnt));
 	pb.push_back("li $v0,4");
 	pb.push_back("la $a0,err_string");
 	pb.push_back("syscall");
 	pb.push_back("li $v0, 10");
 	pb.push_back("syscall");
-	pb.push_back("skip:lw $s1, 0($sp)"); 
+	pb.push_back("skip"+to_string(labelCnt++)+":lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
 	pb.push_back("div $s1,$s0"); 
@@ -610,16 +626,16 @@ FACTOR:
 	pb.push_back("addi $sp, $sp,4"); 
 	
 						 
-	pb.push_back("beq $s0,$zero,BinaryNot_return1"); 
+	pb.push_back("beq $s0,$zero,BinaryNot_return"+to_string(labelCnt)); 
 	pb.push_back("li $s2,0"); 
 	
-	pb.push_back("j BinaryNot_save"); 
+	pb.push_back("j BinaryNot_save"+to_string(labelCnt)); 
 	
-	pb.push_back("BinaryNot_return1 : li $s2,1"); 
+	pb.push_back("BinaryNot_return"+to_string(labelCnt)+" : li $s2,1"); 
 	
 	
 	
-	pb.push_back("BinaryNot_save: addi $sp, $sp,-4"); 
+	pb.push_back("BinaryNot_save"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	
     }
@@ -670,6 +686,7 @@ STMT_ASSIGN:
 ;
 STMT_RETURN:
  returnKeyWord EXP Semicolon{returnHandle();}
+ |returnKeyWord Semicolon{voidReturn();}
 ;
 TYPE:
  IntKeyWord {strcpy($$,"int"); }
@@ -742,6 +759,18 @@ int main(int argc, char *argv[])
 		yyin = fopen(argv[1], "r");
 	f1=fopen("output.mips","w");
 
+	/* print built in function*/
+	Node tmp=Node();
+    tmp.address=-10;
+    tmp.scope=-1;
+	tmp.numOfArguments=1;
+	tmp.TYPE=SEM_TYPE_FUNCTION_VOID;
+    symbolTable["print"]=tmp;
+	tmp.numOfArguments=0;
+	tmp.TYPE=SEM_TYPE_FUNCTION_INT;
+	symbolTable["scan"]=tmp;
+	/**/
+
     if(!yyparse())
 		printf("\nParsing complete\n");
 	else
@@ -761,6 +790,13 @@ int main(int argc, char *argv[])
 		error("main function Not Found!");
 		exit(-4);
 	}
+	while(!instJump.empty())
+	{
+		int top=instJump.top();
+		pb[top-1]="a"+to_string(top)+": "+pb[top-1];
+		instJump.pop();
+	}
+	
 	printf("MIPS CODE is saves in output file!\n");
 	if(verbose)
 		printf("Code:\n");

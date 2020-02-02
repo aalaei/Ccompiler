@@ -17,18 +17,13 @@ int main()
 // int a = b;
 //return b/(4-3);
 //int a=18/x(2,-2);
-int a;
-for(int i;i<10;i=i+1)
+int a=8/2;
+//print(a);
+for(int i=1;i<10;i++)
 {
-a=2;
+print(i);
 }
-if (a<1)
-return a;
-else
-{
-int b=3;
-return b;
-}
+
 //x();
 
 

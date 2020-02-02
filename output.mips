@@ -6,107 +6,96 @@ addi $sp,$sp,4
 sw $s0, 100($gp)
 .data:
 err_string: .asciiz "\ndivide by zero error!\n"
+nextline_string: .asciiz "\n"
 .text:
 jal main
 li $v0, 10
 syscall
-x: addi $sp, $sp,-4
-sw $ra,0($sp)
-li $s0 , 23
-addi $sp,$sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp,$sp,4
-sw $s0, 104($gp)
-li $v0,0
-lw $ra, 0($sp)
-addi $sp, $sp,4
-addi $sp, $sp,-4
-sw $v0, 0($sp)
-jr $ra
 main: addi $sp, $sp,-4
 sw $ra,0($sp)
-lw $s0,112($gp)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-li $s0 , 10
+li $s0 , 8
 addi $sp,$sp,-4
 sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-lw $s1, 0($sp)
-addi $sp, $sp,4
-blt $s1, $s0,OperatorSmall_true
-li $s0, 0
-j OperatorSmall_write
-OperatorSmall_true: li $s0, 1
-OperatorSmall_write: addi $sp, $sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-be $s0,$zero 73
-j 66
-lw $s0,112($gp)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-li $s0 , 1
-addi $sp,$sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-lw $s1, 0($sp)
-addi $sp, $sp,4
-add $s2,$s1,$s0
-addi $sp, $sp,-4
-sw $s2,0($sp)
-lw $s0, 0($sp)
-addi $sp,$sp,4
-sw $s0, 112($gp)
-j 29
 li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
+addi $sp, $sp,4
+bne $s0,$zero,skip0
+li $v0,4
+la $a0,err_string
+syscall
+li $v0, 10
+syscall
+skip0:lw $s1, 0($sp)
+addi $sp, $sp,4
+div $s1,$s0
+mflo $s2
+addi $sp, $sp,-4
+sw $s2,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 104($gp)
+li $v0,5
+syscall
+addi $sp,$sp,-4
+sw $v0,0($sp)
+lw $s0, 0($sp)
 addi $sp,$sp,4
 sw $s0, 108($gp)
-j 49
 lw $s0,108($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
-li $s0 , 1
+li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
 lw $s1, 0($sp)
 addi $sp, $sp,4
-blt $s1, $s0,OperatorSmall_true
+blt $s1, $s0,OperatorSmall_true1
 li $s0, 0
-j OperatorSmall_write
-OperatorSmall_true: li $s0, 1
-OperatorSmall_write: addi $sp, $sp,-4
+j OperatorSmall_write1
+OperatorSmall_true1: li $s0, 1
+OperatorSmall_write1: addi $sp, $sp,-4
 sw $s0,0($sp)
-lw $s0, 0($sp)
+li $v0,1
+lw $a0,0($sp)
+addi $sp,$sp,4
+syscall
+li $v0,4
+la $a0,nextline_string
+syscall
+li $v0,0
+addi $sp,$sp,-4
+sw $v0,0($sp)
+lw $v1, 0($sp)
 addi $sp, $sp,4
-be $s0,$zero, 98
-lw $s0,108($gp)
+lw $s0,104($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
-lw $v0, 0($sp)
-addi $sp, $sp,4
-j 109
-li $s0 , 3
+li $s0 , 8
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
-addi $sp,$sp,4
-sw $s0, 116($gp)
-lw $s0,116($gp)
-addi $sp, $sp,-4
+addi $sp, $sp,4
+lw $s1, 0($sp)
+addi $sp, $sp,4
+blt $s1, $s0,OperatorSmall_true2
+li $s0, 0
+j OperatorSmall_write2
+OperatorSmall_true2: li $s0, 1
+OperatorSmall_write2: addi $sp, $sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp, $sp,4
+beq $s0,$zero, a98
+li $s0 , 2
+addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $v0, 0($sp)
 addi $sp, $sp,4
-lw $ra, 0($sp)
+a98: lw $ra, 0($sp)
 addi $sp, $sp,4
 addi $sp, $sp,-4
 sw $v0, 0($sp)

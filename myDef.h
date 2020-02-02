@@ -12,6 +12,8 @@ long long PC;
 
 stack<int> semantic_stack; 
 
+stack<int> instJump; 
+
 extern string lastScope;
 enum SemanticType{
     NONE,
@@ -105,6 +107,11 @@ bool declare_Function(string name,int numOfArguments,string type)
     tmp.address=pb.size()+1;
     tmp.scope=-1;
     lastScope=name;
+    if(name=="print" || name=="scan" )
+    {
+        error("reserved Function!!");
+        exit(-8);
+    }
     if(name=="main")
     {
         PC=tmp.address;
@@ -116,8 +123,6 @@ bool declare_Function(string name,int numOfArguments,string type)
     else return false;
     tmp.numOfArguments=numOfArguments;
     symbolTable[name]=tmp;
-
-
 
     char temp[500];
 
@@ -143,6 +148,29 @@ bool declare_Function(string name,int numOfArguments,string type)
 int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,int  arg3=0)
 {
     int args[4]={arg0,arg1,arg2,arg3};
+    if(name=="print"&& numOfArgs==1)
+    {
+        pb.push_back("li $v0,1");
+	    pb.push_back("lw $a0,0($sp)");
+        pb.push_back("addi $sp,$sp,4");
+	    pb.push_back("syscall");
+        pb.push_back("li $v0,4");
+	    pb.push_back("la $a0,nextline_string");
+	    pb.push_back("syscall");
+
+        pb.push_back("li $v0,0");
+        pb.push_back("addi $sp,$sp,-4");
+        pb.push_back("sw $v0,0($sp)");
+
+        return true;
+    }else if (name=="scan"&& numOfArgs==0)
+    {
+        pb.push_back("li $v0,5");
+	    pb.push_back("syscall");
+        pb.push_back("addi $sp,$sp,-4");
+        pb.push_back("sw $v0,0($sp)");
+        return true;
+    }
     char tmp[500];
     
 	  if(symbolTable[name].TYPE<2)
@@ -205,6 +233,7 @@ void makeGolobal()
             
     }
     pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
+    pb.push_back("nextline_string: .asciiz \"\\n\"");
     pb.push_back(".text:");
     push(pb.size());
     pb.push_back("");
@@ -234,6 +263,15 @@ void removeItemFromSymbolTable(string cur)
         }
     }
 }
+void voidReturn()
+{
+    pb.push_back("lw $ra, 0($sp)");  // pop to $ra
+    pb.push_back("addi $sp, $sp,4"); 
+
+    pb.push_back("addi $sp, $sp,-4");  // push from $v0
+    pb.push_back("sw $v0, 0($sp)"); 
+    pb.push_back("jr $ra");
+}
 void returnHandle()
 {
     symbolTable[lastScope].output=1;
@@ -246,6 +284,7 @@ void returnHandle()
     pb.push_back("lw $v0, 0($sp)");    // pop to $v0
     }
     pb.push_back("addi $sp, $sp,4");
+    voidReturn();
 }
 void functionFinished(int numberOfArguments,string ID)
 {
@@ -276,24 +315,22 @@ void functionFinished(int numberOfArguments,string ID)
             pb.push_back("li $v0,0");
             
         }
-        pb.push_back("lw $ra, 0($sp)");  // pop to $ra
-	    pb.push_back("addi $sp, $sp,4"); 
+       
             
         /*
         pb.push_back("lw $v0, 0($sp)"); 
         pb.push_back("addi $sp, $sp,4");   // pop to $v0
-*/
-        
-	    pb.push_back("addi $sp, $sp,-4");  // push from $v0
-        pb.push_back("sw $v0, 0($sp)"); 
+*/      
 
-    }else{
-        
-        pb.push_back("lw $ra, 0($sp)"); 
-	    pb.push_back("addi $sp, $sp,4"); 
     }
-    
-    pb.push_back("jr $ra");
+    /*
+    pb.push_back("lw $ra, 0($sp)");  // pop to $ra
+    pb.push_back("addi $sp, $sp,4"); 
+
+    pb.push_back("addi $sp, $sp,-4");  // push from $v0
+    pb.push_back("sw $v0, 0($sp)"); 
+    pb.push_back("jr $ra");*/
+    voidReturn();
 }
 
 void save()
@@ -305,26 +342,36 @@ void save()
 }
 void whileJump()
 {
-    pb[pop()]="be $s0,$zero "+to_string(pb.size()+2);
-    pb.push_back("j "+to_string(pop()+1));
+    instJump.push(pb.size()+2);
+    pb[pop()]="beq $s0,$zero, "+to_string(pb.size()+2);
+    int a=pop()+1;
+    instJump.push(a);
+    pb.push_back("j a"+to_string(a));
+    //  pb.push_back("j "+to_string(pop()+1));              ??//
     //cout<<"EEE"<<pop()<<endl;
 }
 void forJump()
 {
     int a=pop();
-    pb.push_back("j "+ to_string(a+3));
-    pb[a]="be $s0,$zero "+to_string(pb.size()+1);
+    //pb.push_back("j "+ to_string(a+3));               ??//
+    pb.push_back("j a"+ to_string(a+3));
+    instJump.push(a+3);
+    pb[a]="beq $s0,$zero, a"+to_string(pb.size()+1);
+    instJump.push(pb.size()+1);
 }
 void jump()
 {
-    pb[pop()]="j "+ to_string(pb.size()+1);    
+    //pb[pop()]="j "+ to_string(pb.size()+1);         ??//
+    pb[pop()]="j a"+ to_string(pb.size()+1);   
+    instJump.push(pb.size()+1); 
 }
 void saveJump()
 {
     int top=pop();
     //int top_1=pop();
     
-    pb[top]="be $s0,$zero, "+to_string(pb.size()+2);
+    pb[top]="beq $s0,$zero, "+to_string(pb.size()+2);
+    instJump.push(pb.size()+2);
     push(pb.size());
     pb.push_back("");
 

@@ -14,18 +14,19 @@ int main()
    // int a = b;
     //return b/(4-3);
    //int a=18/x(2,-2);
-   int a;
-   for(int i;i<10;i=i+1)
+   int a=8/2;
+   //print(a);
+   /*for(int i=10;i>1;i=i-2)
    {
-     a=2;
-   }
-   if (a<1)
-    return a;
-   else
+     print(i);
+   }*/
+   int c=scan();
+   print(c<2);
+   if(a<8)
    {
-     int b=3;
-    return b;
+     return 2;
    }
+   
    //x();
    
    
