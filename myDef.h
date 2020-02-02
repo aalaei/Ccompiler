@@ -12,6 +12,8 @@ long long PC;
 
 stack<int> semantic_stack; 
 
+stack<long long> goodSpace;
+
 stack<int> instJump; 
 
 extern string lastScope;
@@ -36,13 +38,14 @@ private:
     }
 public:
 
-    Node(){address=0;output=0;TYPE=NONE;scope=-1;numOfArguments=-1;name="";};
+    Node(){address=0;output=0;TYPE=NONE;scope=-1;numOfArguments=-1;name="";size=1;};
     SemanticType TYPE;
     long long address;
     int scope;
     int numOfArguments;
     bool output;
     string name;
+    int size;
     void print(bool show=0)
     {
         if(show)
@@ -56,11 +59,54 @@ stack<Node> my_redundant_stack;
 map<string,Node> symbolTable;
 int i=0;
 vector<string> pb;
-
+void makeFree(long long ad,int size=1)
+{
+    for(int i=0;i<size;i++)
+    {
+        goodSpace.push(ad+4*i);
+    }
+}
 long long getFree(int size=1)
 {
     long long res=Cur_Mem_tmp;
-    Cur_Mem_tmp += size*4;
+    if(goodSpace.size()<size)
+        Cur_Mem_tmp += size*4;
+    else{
+        int max=0;
+        res=goodSpace.top();
+        vector<int> ar;
+        for(int i=0;i<size;i++)
+        {
+            if(goodSpace.top()<res)
+                res=goodSpace.top();
+            if(goodSpace.top()>max)
+                max=goodSpace.top();
+            ar.push_back(goodSpace.top());
+            goodSpace.pop();  
+        }
+        bool ok=1;
+        for(int i=res;i<=max;i+=4)
+        {
+            bool contains=0;
+            for(int j=0;j<size;j++)
+            {
+                if(ar[j]==i)
+                {
+                    contains=1;
+                    break;
+                }
+            }
+            if(!contains)
+                ok=0;
+        }
+        if(!ok)
+        {
+            for(int i=0;i<ar.size();i++)
+                goodSpace.push(ar[i]);
+            Cur_Mem_tmp += size*4;
+        }
+        
+    }
     return res;
 }
 void push(int in)
@@ -299,6 +345,7 @@ void functionFinished(int numberOfArguments,string ID)
         cur.print(1);
         printf("\n");
         my_redundant_stack.pop();
+        makeFree(cur.address,cur.size);
         removeItemFromSymbolTable(cur.name);
     }
     while(!my_stack.empty())

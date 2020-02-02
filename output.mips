@@ -13,6 +13,20 @@ li $v0, 17
 lw $a0, 0($sp)
 addi $sp, $sp,4
 syscall
+x: addi $sp, $sp,-4
+sw $ra,0($sp)
+li $s0 , 23
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 104($gp)
+li $v0,0
+lw $ra, 0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $v0, 0($sp)
+jr $ra
 main: addi $sp, $sp,-4
 sw $ra,0($sp)
 li $s0 , 8
@@ -37,15 +51,15 @@ addi $sp, $sp,-4
 sw $s2,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
-sw $s0, 104($gp)
+sw $s0, 108($gp)
 li $v0,5
 syscall
 addi $sp,$sp,-4
 sw $v0,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
-sw $s0, 108($gp)
-lw $s0,108($gp)
+sw $s0, 112($gp)
+lw $s0,112($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
 li $s0 , 2
@@ -73,7 +87,7 @@ addi $sp,$sp,-4
 sw $v0,0($sp)
 lw $v1, 0($sp)
 addi $sp, $sp,4
-lw $s0,104($gp)
+lw $s0,108($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
 li $s0 , 8
@@ -91,7 +105,7 @@ OperatorSmall_write2: addi $sp, $sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
-beq $s0,$zero, a105
+beq $s0,$zero, a119
 li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
@@ -102,7 +116,7 @@ addi $sp, $sp,4
 addi $sp, $sp,-4
 sw $v0, 0($sp)
 jr $ra
-a105: li $s0 , 3
+a119: li $s0 , 3
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $v0, 0($sp)
