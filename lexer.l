@@ -5,6 +5,17 @@
  extern int yylineNum;
  void yyerror(const char *);
  //%option c++
+ int findNexLine(char * txt)
+ {
+     int res=0;
+     while(*txt)
+     {
+        if(*txt == '\n')
+            res++;
+         txt++;
+     }
+     return res;
+ }
 %}
 numbers ([0-9])+
 alpha ([a-zA-Z])([a-zA-Z0-9]*)
@@ -75,6 +86,12 @@ alpha ([a-zA-Z])([a-zA-Z0-9]*)
 "+" {
     return OperatorAdd;
 }
+"++" {
+    return OperatorPP;
+}
+"--" {
+    return OperatorMM;
+}
 "-" {
     return OperatorMinus;
 }
@@ -118,7 +135,7 @@ alpha ([a-zA-Z])([a-zA-Z0-9]*)
 
 [ \t] ; /* skip whitespace */
 "//".* ;
-[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       ;
+[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       {yylineNum+=findNexLine(yytext);}
 [/][*]                                    { yyerror("Unterminated comment"); }
 [\n] {yylineNum++;}
 . yyerror("Unknown character");

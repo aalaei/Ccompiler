@@ -47,6 +47,8 @@
 %token <name> elseKeyWord
 %token <name> whileKeyWord
 %token <name> forKeyWord
+%token <name> OperatorPP
+%token <name> OperatorMM
 
 %token <name> VoidKeyWord
 %token <name> IntKeyWord
@@ -80,7 +82,7 @@
 %token <name> ID
 
 %type <name> STMT_DECLARE PGM TYPE STMT_WHILE STMT_FOR
-%type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE STMT_CONDITIONAL
+%type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE //STMT_CONDITIONAL
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
 
@@ -139,7 +141,7 @@ other_statement:
  STMT_DECLARE | 
  STMT_ASSIGN |
  STMT_RETURN|
- STMT_CONDITIONAL|
+// STMT_CONDITIONAL|
  STMT_WHILE|
  STMT_FOR|
  Semicolon{semantic_stack.top();}
@@ -148,35 +150,50 @@ STMT_WHILE:
  whileKeyWord OpenParenthesis{push(pb.size());} EXP CloseParenthesis {save();} OpenBrace STMTS CloseBrace {whileJump();}
 
 ;
+ONLY_ONE_STMT:
+ ID OperatorAssign EXP { assignto($1);}
+ | ID OperatorPP {plusPlus($1,1);}
+ | ID OperatorMM {plusPlus($1,-1);}
+ | EXP {pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");warning("useless epression!");} // pop use less result!!
+ | {pb.push_back("NOP");}
+;
 STMT_FOR:
- forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon {save();pb.push_back("");}STMT{int a=pop();pb[a+1]="j "+to_string(pb.size()+2);pb.push_back("j "+to_string(pop()+1));push(a);}  CloseParenthesis OpenBrace STMTS CloseBrace
+ forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon {save();pb.push_back("");}ONLY_ONE_STMT{int a=pop();pb[a+1]="j "+to_string(pb.size()+2);pb.push_back("j "+to_string(pop()+1));push(a);}  CloseParenthesis OpenBrace STMTS CloseBrace
   {forJump();}
 
 ;
-
+/*
 STMT_CONDITIONAL:
 
  IF OpenBrace STMTS CloseBrace {pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);}
  | IF OpenBrace STMTS CloseBrace elseKeyWord {saveJump();} OpenBrace STMTS CloseBrace{saveJump();}
  
 ;
-
+*/
 matched:
-   IF_ELSE matched{jump();}
-  | other_statement
+  IF_ELSE matched{jump();}
+  |other_statement
 ;
 
 unmatched:
   IF STMT {
 	  pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);
   }
+  |IF BLOCK{
+	  pb[pop()]="be $s0,$zero, "+to_string(pb.size()+1);
+  }
   |IF_ELSE unmatched{jump();}
+  |IF_ELSE BLOCK {jump();}
 ;
 IF_ELSE:
 	IF matched elseKeyWord {saveJump();}
+	| IF BLOCK elseKeyWord {saveJump();}
 ;
 IF:
 	ifKeyWord OpenParenthesis EXP CloseParenthesis {save();}
+;
+BLOCK :
+ OpenBrace STMTS CloseBrace
 ;
 
 EXP:
@@ -613,6 +630,11 @@ FACTOR:
 	{
 		$$ = 123; 
 		char temp[500];
+		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_INT)
+		{
+			error("variable has not been declared properly!");
+			exit(-10);
+		}
 		sprintf(temp,"lw $s0,%llu($gp)",symbolTable[$1].address);
 		pb.push_back(temp);
 		pb.push_back("addi $sp, $sp,-4"); 
@@ -637,8 +659,12 @@ IDS:
  Comma ID {declare_IntVariable($2);} IDS 
 ;
 STMT_ASSIGN:
+
  ID OperatorAssign EXP Semicolon { assignto($1);}
+ | ID OperatorPP  Semicolon {plusPlus($1,1);}
+ | ID OperatorMM  Semicolon {plusPlus($1,-1);}
  | EXP Semicolon {pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");warning("useless epression!");} // pop use less result!!
+ 
 ;
 STMT_RETURN:
  returnKeyWord EXP Semicolon{returnHandle();}

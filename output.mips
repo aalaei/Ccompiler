@@ -1,3 +1,9 @@
+li $s0 , 2
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 100($gp)
 .data:
 err_string: .asciiz "\ndivide by zero error!\n"
 .text:
@@ -6,7 +12,7 @@ li $v0, 10
 syscall
 main: addi $sp, $sp,-4
 sw $ra,0($sp)
-lw $s0,112($gp)
+lw $s0,108($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
 li $s0 , 10
@@ -24,9 +30,9 @@ OperatorSmall_write: addi $sp, $sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
-be $s0,$zero 53
-j 46
-lw $s0,112($gp)
+be $s0,$zero 59
+j 52
+lw $s0,108($gp)
 addi $sp, $sp,-4
 sw $s0,0($sp)
 li $s0 , 1
@@ -41,16 +47,51 @@ addi $sp, $sp,-4
 sw $s2,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
-sw $s0, 112($gp)
-j 9
+sw $s0, 108($gp)
+j 15
 li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
-sw $s0, 108($gp)
-j 29
-li $v0,0
+sw $s0, 104($gp)
+j 35
+lw $s0,104($gp)
+addi $sp, $sp,-4
+sw $s0,0($sp)
+li $s0 , 1
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp, $sp,4
+lw $s1, 0($sp)
+addi $sp, $sp,4
+blt $s1, $s0,OperatorSmall_true
+li $s0, 0
+j OperatorSmall_write
+OperatorSmall_true: li $s0, 1
+OperatorSmall_write: addi $sp, $sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp, $sp,4
+be $s0,$zero, 84
+lw $s0,104($gp)
+addi $sp, $sp,-4
+sw $s0,0($sp)
+lw $v0, 0($sp)
+addi $sp, $sp,4
+j 95
+li $s0 , 3
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $s0, 0($sp)
+addi $sp,$sp,4
+sw $s0, 112($gp)
+lw $s0,112($gp)
+addi $sp, $sp,-4
+sw $s0,0($sp)
+lw $v0, 0($sp)
+addi $sp, $sp,4
 lw $ra, 0($sp)
 addi $sp, $sp,4
 addi $sp, $sp,-4

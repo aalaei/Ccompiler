@@ -24,7 +24,7 @@ private:
     string tp()
     {
         if(TYPE==NONE)
-            return "None";
+            return "None TYPE";
         else if (TYPE==SEM_TYPE_VARIABLE_INT)
             return "int_variable";
         else if (TYPE==SEM_TYPE_FUNCTION_INT)
@@ -34,7 +34,7 @@ private:
     }
 public:
 
-    Node(){address=0;output=0;};
+    Node(){address=0;output=0;TYPE=NONE;scope=-1;numOfArguments=-1;name="";};
     SemanticType TYPE;
     long long address;
     int scope;
@@ -89,7 +89,7 @@ bool declare_IntVariable(string name,bool local=0)
         tmp.scope=1;
     }
     tmp.address=getFree();
-    tmp.numOfArguments=0;
+    tmp.numOfArguments=-1;
     tmp.TYPE=SEM_TYPE_VARIABLE_INT;
     symbolTable[name]=tmp;
     
@@ -103,7 +103,7 @@ bool declare_Function(string name,int numOfArguments,string type)
     Node tmp=Node();
     //tmp.address=getFree();
     tmp.address=pb.size()+1;
-    tmp.scope=1;
+    tmp.scope=-1;
     lastScope=name;
     if(name=="main")
     {
@@ -209,6 +209,17 @@ void makeGolobal()
     pb.push_back("");
     pb.push_back("");
 	
+}
+void plusPlus(string ID,int sum)
+{
+    char temp[500];
+    sprintf(temp,"lw $s0,%llu($gp)",symbolTable[ID].address);
+    pb.push_back(temp);
+    pb.push_back("li $s1, "+to_string(sum));
+    pb.push_back("add $s2,$s0,$s1");
+    pb.push_back("addi $sp, $sp,-4"); 
+    pb.push_back("sw $s2,0($sp)");
+    assignto(ID);
 }
 void removeItemFromSymbolTable(string cur)
 {

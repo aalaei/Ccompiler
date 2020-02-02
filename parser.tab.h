@@ -50,34 +50,36 @@ extern int yydebug;
     elseKeyWord = 260,
     whileKeyWord = 261,
     forKeyWord = 262,
-    VoidKeyWord = 263,
-    IntKeyWord = 264,
-    returnKeyWord = 265,
-    OpenBrace = 266,
-    CloseBrace = 267,
-    OpenParenthesis = 268,
-    CloseParenthesis = 269,
-    Semicolon = 270,
-    Comma = 271,
-    OperatorSmallEqual = 272,
-    OperatorSmall = 273,
-    OperatorBigEqual = 274,
-    OperatorBig = 275,
-    OperatorNotEqual = 276,
-    OperatorEqual = 277,
-    OperatorAssign = 278,
-    OperatorAdd = 279,
-    OperatorMinus = 280,
-    OperatorMult = 281,
-    OperatorDiv = 282,
-    OperatorOR = 283,
-    OperatorAnd = 284,
-    OperatorXOR = 285,
-    BinaryOR = 286,
-    BinaryAnd = 287,
-    BinaryNot = 288,
-    UnaryNot = 289,
-    ID = 290
+    OperatorPP = 263,
+    OperatorMM = 264,
+    VoidKeyWord = 265,
+    IntKeyWord = 266,
+    returnKeyWord = 267,
+    OpenBrace = 268,
+    CloseBrace = 269,
+    OpenParenthesis = 270,
+    CloseParenthesis = 271,
+    Semicolon = 272,
+    Comma = 273,
+    OperatorSmallEqual = 274,
+    OperatorSmall = 275,
+    OperatorBigEqual = 276,
+    OperatorBig = 277,
+    OperatorNotEqual = 278,
+    OperatorEqual = 279,
+    OperatorAssign = 280,
+    OperatorAdd = 281,
+    OperatorMinus = 282,
+    OperatorMult = 283,
+    OperatorDiv = 284,
+    OperatorOR = 285,
+    OperatorAnd = 286,
+    OperatorXOR = 287,
+    BinaryOR = 288,
+    BinaryAnd = 289,
+    BinaryNot = 290,
+    UnaryNot = 291,
+    ID = 292
   };
 #endif
 
@@ -92,7 +94,7 @@ union YYSTYPE
 	char name[100];
 	long long address;
 
-#line 96 "parser.tab.h" /* yacc.c:1909  */
+#line 98 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
