@@ -113,7 +113,10 @@
 
 %%
 PROGRAM:
- STMT_DECLARE {makeGolobal(); } PGM 
+ {pb.push_back(".data:");
+    pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
+    pb.push_back("nextline_string: .asciiz \"\\n\"");
+    pb.push_back(".text:");}STMT_DECLARE {makeGolobal(); } PGM 
  ;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
@@ -681,7 +684,13 @@ STMT_ASSIGN:
  ID OperatorAssign EXP Semicolon { assignto($1);}
  | ID OperatorPP  Semicolon {plusPlus($1,1);}
  | ID OperatorMM  Semicolon {plusPlus($1,-1);}
- | EXP Semicolon {pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");warning("useless epression!");} // pop use less result!!
+ | EXP Semicolon 
+ {
+	pb.push_back("lw $v1, 0($sp)");
+	pb.push_back("addi $sp, $sp,4");
+	if($1!=-10)
+		warning("useless epression!");
+  } // pop useless result!!
  
 ;
 STMT_RETURN:
@@ -765,6 +774,7 @@ int main(int argc, char *argv[])
     tmp.scope=-1;
 	tmp.numOfArguments=1;
 	tmp.TYPE=SEM_TYPE_FUNCTION_VOID;
+	tmp.output=1;
     symbolTable["print"]=tmp;
 	tmp.numOfArguments=0;
 	tmp.TYPE=SEM_TYPE_FUNCTION_INT;
@@ -783,8 +793,10 @@ int main(int argc, char *argv[])
 	{
 		return_address=pop();
 		pb[return_address]="jal main";
-		pb[return_address+1]="li $v0, 10";
-		pb[return_address+2]="syscall";
+		pb[return_address+1]="li $v0, 17";
+		pb[return_address+2]="lw $a0, 0($sp)";
+		pb[return_address+3]="addi $sp, $sp,4";
+		pb[return_address+4]="syscall";
 	}	
 	else{
 		error("main function Not Found!");

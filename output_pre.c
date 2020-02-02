@@ -19,10 +19,17 @@ int main()
 //int a=18/x(2,-2);
 int a=8/2;
 //print(a);
-for(int i=1;i<10;i++)
+/*for(int i=10;i>1;i=i-2)
 {
 print(i);
+}*/
+int c=scan();
+print(c<2);
+if(a<8)
+{
+return 2;
 }
+return 3;
 
 //x();
 

@@ -1,15 +1,17 @@
+.data:
+err_string: .asciiz "\ndivide by zero error!\n"
+nextline_string: .asciiz "\n"
+.text:
 li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
 sw $s0, 100($gp)
-.data:
-err_string: .asciiz "\ndivide by zero error!\n"
-nextline_string: .asciiz "\n"
-.text:
 jal main
-li $v0, 10
+li $v0, 17
+lw $a0, 0($sp)
+addi $sp, $sp,4
 syscall
 main: addi $sp, $sp,-4
 sw $ra,0($sp)
@@ -89,13 +91,28 @@ OperatorSmall_write2: addi $sp, $sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
-beq $s0,$zero, a98
+beq $s0,$zero, a105
 li $s0 , 2
 addi $sp,$sp,-4
 sw $s0,0($sp)
 lw $v0, 0($sp)
 addi $sp, $sp,4
-a98: lw $ra, 0($sp)
+lw $ra, 0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $v0, 0($sp)
+jr $ra
+a105: li $s0 , 3
+addi $sp,$sp,-4
+sw $s0,0($sp)
+lw $v0, 0($sp)
+addi $sp, $sp,4
+lw $ra, 0($sp)
+addi $sp, $sp,4
+addi $sp, $sp,-4
+sw $v0, 0($sp)
+jr $ra
+lw $ra, 0($sp)
 addi $sp, $sp,4
 addi $sp, $sp,-4
 sw $v0, 0($sp)

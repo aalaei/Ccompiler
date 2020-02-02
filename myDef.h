@@ -157,19 +157,20 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
         pb.push_back("li $v0,4");
 	    pb.push_back("la $a0,nextline_string");
 	    pb.push_back("syscall");
+        
 
         pb.push_back("li $v0,0");
         pb.push_back("addi $sp,$sp,-4");
         pb.push_back("sw $v0,0($sp)");
 
-        return true;
+        return -10;
     }else if (name=="scan"&& numOfArgs==0)
     {
         pb.push_back("li $v0,5");
 	    pb.push_back("syscall");
         pb.push_back("addi $sp,$sp,-4");
         pb.push_back("sw $v0,0($sp)");
-        return true;
+        return -10;
     }
     char tmp[500];
     
@@ -198,6 +199,7 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
       */
 	  //sprintf(tmp,"jalr %llu",symbolTable[name].address);
       pb.push_back("jal "+name);
+      return -10;
       //pb.push_back("push res");
 	  
 }
@@ -220,7 +222,7 @@ void assignto(string ID)
 void makeGolobal()
 {
     map<string,Node>::iterator it = symbolTable.begin();
-    pb.push_back(".data:");
+    
 	while(it != symbolTable.end())
     { 
 		if(it->second.TYPE == SEM_TYPE_VARIABLE_INT)
@@ -232,10 +234,10 @@ void makeGolobal()
         //if (it->first!="")
             
     }
-    pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
-    pb.push_back("nextline_string: .asciiz \"\\n\"");
-    pb.push_back(".text:");
+    
     push(pb.size());
+    pb.push_back("");
+    pb.push_back("");
     pb.push_back("");
     pb.push_back("");
     pb.push_back("");
