@@ -1,4 +1,5 @@
 int reza=2;
+#include "ali.h"
 /*
 int x(a,b)
 {
@@ -25,6 +26,7 @@ int main()
      int b=3;
     return b;
    }
+   //x();
    
    
    /*if(b<5)

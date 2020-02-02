@@ -147,8 +147,10 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
     
 	  if(symbolTable[name].TYPE<2)
 	  {
-		  
-		  sprintf(tmp,"error in function call!!\n\texpected symbol type: 2 or 3 but type is %d\n",symbolTable[name].TYPE);
+		  if(symbolTable[name].TYPE==0)
+            sprintf(tmp,"error in function call!!\n\tundeclared function!!\n");
+          else
+		    sprintf(tmp,"error in function call!!\n\texpected symbol type: 2 or 3 but type is %d\n",symbolTable[name].TYPE);
           error(tmp);
 		  exit(-2);
 	  }

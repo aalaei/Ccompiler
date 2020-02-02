@@ -7,6 +7,8 @@
  using namespace std;
  static long long Cur_Mem_tmp=100;
  bool verbose;
+ bool pre;
+ int out;
  int yylineNum=0;
  string lastScope;
 
@@ -679,12 +681,66 @@ TYPE:
 void yyerror(const char *s) {
  fprintf(stderr, "%s\n", s);
 }
+void help()
+{
+	printf("compiler help!\n\n\tout put file is \'output.mips\'\n\n");
+			cout<<"\tfirst argument is source file path\n";
+			cout<<"\t--show enable some log in each compile step\n";
+			cout<<"\t--pre first pre process the source then compile it"<<endl;
+			cout<<"\t--def enable define out put for processor"<<endl;
+			cout<<"\t-o name name of preProcessor output"<<endl;
+			cout<<"\t-h show help(this page!)"<<endl;
+
+}
 int main(int argc, char *argv[])
 {
-	yyin = fopen(argv[1], "r");
+	char cmd[100];
+	char def[10];
+	strcpy(def," NoDef");
+	pre=0;
+	out=0;
+	if(argc<=1)
+	{
+		help();
+		return(0);
+	}
+	for(int i=2;i<argc;i++)
+	{
+		if(strcmp("--show",argv[i])==0)
+		{
+			verbose=1;
+		}
+		if(strcmp("--pre",argv[i])==0)
+		{
+			pre=1;
+		}
+		if(strcmp("-o",argv[i])==0 && (i+1<argc))
+		{
+			out=i+1;
+		}
+		if(strcmp("--def",argv[i])==0)
+		{
+			def[0]=0;
+		}
+		if(strcmp("-h",argv[i])==0)
+		{
+			help();
+			return(0);
+		}
+		
+	}
+	if(pre)
+	{
+		if(out)
+		{
+			sprintf(cmd,"./pre %s %s %s",argv[1],argv[out],def);
+		}else
+			sprintf(cmd,"./pre %s output_pre.c %s",argv[1],def);
+		system(cmd);
+		yyin = fopen(argv[out], "r");
+	}else
+		yyin = fopen(argv[1], "r");
 	f1=fopen("output.mips","w");
-	if(argc>2 && strcmp("--show",argv[2])==0)
-		verbose=1;
 
     if(!yyparse())
 		printf("\nParsing complete\n");

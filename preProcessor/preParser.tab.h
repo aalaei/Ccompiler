@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_PARSER_TAB_H_INCLUDED
-# define YY_YY_PARSER_TAB_H_INCLUDED
+#ifndef YY_YY_PREPARSER_TAB_H_INCLUDED
+# define YY_YY_PREPARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,41 +45,13 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    NUM = 258,
-    ifKeyWord = 259,
-    elseKeyWord = 260,
-    whileKeyWord = 261,
-    forKeyWord = 262,
-    OperatorPP = 263,
-    OperatorMM = 264,
-    VoidKeyWord = 265,
-    IntKeyWord = 266,
-    returnKeyWord = 267,
-    OpenBrace = 268,
-    CloseBrace = 269,
-    OpenParenthesis = 270,
-    CloseParenthesis = 271,
-    Semicolon = 272,
-    Comma = 273,
-    OperatorSmallEqual = 274,
-    OperatorSmall = 275,
-    OperatorBigEqual = 276,
-    OperatorBig = 277,
-    OperatorNotEqual = 278,
-    OperatorEqual = 279,
-    OperatorAssign = 280,
-    OperatorAdd = 281,
-    OperatorMinus = 282,
-    OperatorMult = 283,
-    OperatorDiv = 284,
-    OperatorOR = 285,
-    OperatorAnd = 286,
-    OperatorXOR = 287,
-    BinaryOR = 288,
-    BinaryAnd = 289,
-    BinaryNot = 290,
-    UnaryNot = 291,
-    ID = 292
+    TEXT = 258,
+    ID = 259,
+    NUM = 260,
+    SHARP = 261,
+    NEXTLINE = 262,
+    defKeyWord = 263,
+    includeKeyWord = 264
   };
 #endif
 
@@ -88,13 +60,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 42 "parser.y" /* yacc.c:1909  */
+#line 133 "preParser.y" /* yacc.c:1909  */
 
+	char T[1000];
+	char name[500];
 	int iVal;
-	char name[100];
-	long long address;
 
-#line 98 "parser.tab.h" /* yacc.c:1909  */
+#line 70 "preParser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -107,4 +79,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_YY_PREPARSER_TAB_H_INCLUDED  */
