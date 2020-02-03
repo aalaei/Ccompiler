@@ -1,4 +1,25 @@
 int reza=2;
+int fib(in)
+
+{
+
+if(in==1 || in ==2)
+
+{
+
+return 1;
+
+}else{
+
+return fib(in-1)+fib(in-2);
+
+}
+
+}
+
+
+
+
 int main()
 {
 // int b=7;
@@ -13,11 +34,10 @@ int main()
 {
 print(i);
 }*/
-int c=1;
-while(c<=5)
+int c=scan();
+for(int i=1;i!=c;i++)
 {
-print(c);
-c++;
+print(fib(i));
 }
 
 

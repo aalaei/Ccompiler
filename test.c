@@ -1,5 +1,5 @@
 int reza=2;
-//#include "ali.h"
+#include "ali.h"
 /*
 int x(a,b)
 {
@@ -21,11 +21,10 @@ int main()
    {
      print(i);
    }*/
-   int c=1;
-   while(c<=5)
+   int c=scan();
+   for(int i=1;i!=c;i++)
    {
-     print(c);
-     c++;
+     print(fib(i));
    }
    
    

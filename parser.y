@@ -109,7 +109,8 @@
 
 //%left '+' '-' //'*' '/'
 //%right '*' '/'
-
+%right OperatorPP OperatorMM
+%right ID
 
 %%
 PROGRAM:
@@ -162,6 +163,7 @@ STMT_WHILE:
  whileKeyWord OpenParenthesis{push(pb.size());} EXP CloseParenthesis {save();} OpenBrace STMTS CloseBrace {whileJump();}
 
 ;
+/*
 ONLY_ONE_STMT:
  ID OperatorAssign EXP { assignto($1);}
  | ID OperatorPP {plusPlus($1,1);}
@@ -169,13 +171,16 @@ ONLY_ONE_STMT:
  | EXP {pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");warning("useless epression!");} // pop use less result!!
  | {pb.push_back("NOP");}
 ;
+*/
 STMT_FOR:
  forKeyWord OpenParenthesis STMT_DECLARE {push(pb.size());} EXP Semicolon 
  {	
 	 save();
 	 pb.push_back("");
- }ONLY_ONE_STMT
- {	
+ }/*ONLY_ONE_STMT*/EXP
+ {
+	 pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");	
+
 	 int a=pop();
 	 pb[a+1]="j a"+to_string(pb.size()+2);
 	 instJump.push(pb.size()+2);
@@ -391,7 +396,7 @@ TERM4:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
-	pb.push_back("bnq $s0,$s1,OperatorNotEqual_true"+to_string(labelCnt)); 
+	pb.push_back("bne $s0,$s1,OperatorNotEqual_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
@@ -587,7 +592,9 @@ TERM:
  }
  | FACTOR {$$ = ($1);}
 ;
+
 FACTOR:
+
  NUM {
 	 $$ = $1;
 	 char tmp[500];
@@ -652,7 +659,7 @@ FACTOR:
 		$$ = $2;
 		 //not thing
 	 }
-	| ID 
+	|ID 
 	{
 		$$ = 123; 
 		char temp[500];
@@ -669,9 +676,13 @@ FACTOR:
 		//pb.push_back(temp);
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
+		printf("i am called:%s!!\n",$1);
 	}
+	| ID OperatorPP {plusPlus($1,1,1);printf("+ am called:%s!!\n",$1);}
+	| ID OperatorMM {plusPlus($1,-1,1);}
 	| EXP_FUNCTIONCALL{};
 ;
+
 STMT_DECLARE:
  IntKeyWord ID {declare_IntVariable($2);} IDS Semicolon
  |IntKeyWord ID {declare_IntVariable($2);} OperatorAssign EXP Semicolon {assignto($2);}
