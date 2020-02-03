@@ -9,6 +9,7 @@
  bool verbose;
  bool pre;
  int out;
+ int mid;
  int yylineNum=0;
  string lastScope;
  int labelCnt=0;
@@ -114,10 +115,10 @@
 
 %%
 PROGRAM:
- {pb.push_back(".data:");
+ {pb.push_back(".data");
     pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
     pb.push_back("nextline_string: .asciiz \"\\n\"");
-    pb.push_back(".text:");
+    pb.push_back(".text");
 	pb.push_back("li $s0, 500");
 	pb.push_back("sw $s0, 100($gp)");
 	pb.push_back("li $s0, 0");
@@ -190,7 +191,25 @@ STMT_FOR:
 	 push(a);
   }  CloseParenthesis OpenBrace STMTS CloseBrace
   {forJump();}
+  |
+  forKeyWord OpenParenthesis STMT_ASSIGN {push(pb.size());} EXP Semicolon 
+ {	
+	 save();
+	 pb.push_back("");
+ }EXP
+ {
+	 pb.push_back("lw $v1, 0($sp)");pb.push_back("addi $sp, $sp,4");	
 
+	 int a=pop();
+	 pb[a+1]="j a"+to_string(pb.size()+2);
+	 instJump.push(pb.size()+2);
+	 int b=pop()+1;
+	 pb.push_back("j a"+to_string(b));
+	 instJump.push(b);
+	 push(a);
+  }  CloseParenthesis OpenBrace STMTS CloseBrace
+  {forJump();}
+  
 ;
 /*
 STMT_CONDITIONAL:
@@ -422,6 +441,11 @@ TERM3:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
+	pb.push_back("slt $s0,$s1, $s0");  
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+
+	/*
 	pb.push_back("blt $s1, $s0,OperatorSmall_true"+to_string(labelCnt)); 
 	
 	//age false bood
@@ -432,7 +456,7 @@ TERM3:
 	pb.push_back("OperatorSmall_true"+to_string(labelCnt)+": li $s0, 1"); 
 	pb.push_back("OperatorSmall_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
-	
+	*/
  }
 	 
  | TERM2 OperatorSmallEqual TERM2
@@ -445,6 +469,15 @@ TERM3:
 						 
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
+
+	pb.push_back("slt $s0,$s0, $s1");  
+	pb.push_back("neg $s0,$s0");  
+	pb.push_back("addi $s0,$s0,1");  
+
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+
+	/*
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
 	pb.push_back("blt $s0, $s1,OperatorSmallEqual_false"+to_string(labelCnt)); 
 	
@@ -456,6 +489,8 @@ TERM3:
 	pb.push_back("OperatorSmallEqual_false"+to_string(labelCnt)+": li $s0, 0"); 
 	pb.push_back("OperatorSmallEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
+
+	*/
 	
  }
  | TERM2 OperatorBig TERM2
@@ -469,7 +504,13 @@ TERM3:
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
-	pb.push_back("blt $s0, $s1,OperatorBig_true"+to_string(labelCnt)); 
+	
+	pb.push_back("slt $s0,$s0, $s1");  
+	
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+	
+	/*pb.push_back("blt $s0, $s1,OperatorBig_true"+to_string(labelCnt)); 
 	
 	//age false bood
 	pb.push_back("li $s0, 0"); 
@@ -478,7 +519,7 @@ TERM3:
 	//true bood
 	pb.push_back("OperatorBig_true"+to_string(labelCnt)+": li $s0, 1"); 
 	pb.push_back("OperatorBig_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
-	pb.push_back("sw $s0,0($sp)"); 
+	pb.push_back("sw $s0,0($sp)"); */
 	
  }
  | TERM2 OperatorBigEqual TERM2
@@ -491,8 +532,18 @@ TERM3:
 						 
 	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
+
+
+	pb.push_back("slt $s0,$s1, $s0");  
+	pb.push_back("neg $s0,$s0");  
+	pb.push_back("addi $s0,$s0,1");  
+
+	pb.push_back("addi $sp, $sp,-4"); 
+	pb.push_back("sw $s0,0($sp)"); 
+
+	/*
 	 //blt $t0, $t4, VIP_LESS  # if $t0 < $t4 then VIP
-	pb.push_back("blt $s1, $s0,OperatorBigEqual_false"); 
+	pb.push_back("blt $s1, $s0,OperatorBigEqual_false"+to_string(labelCnt)); 
 	
 	//age true bood
 	pb.push_back("li $s0, 1"); 
@@ -502,7 +553,7 @@ TERM3:
 	pb.push_back("OperatorBigEqual_false"+to_string(labelCnt)+": li $s0, 0"); 
 	pb.push_back("OperatorBigEqual_write"+to_string(labelCnt++)+": addi $sp, $sp,-4"); 
 	pb.push_back("sw $s0,0($sp)"); 
-	
+	*/
  }
  | TERM2 {$$ = ($1);}
  
@@ -676,9 +727,9 @@ FACTOR:
 		//pb.push_back(temp);
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
-		printf("i am called:%s!!\n",$1);
+		
 	}
-	| ID OperatorPP {plusPlus($1,1,1);printf("+ am called:%s!!\n",$1);}
+	| ID OperatorPP {plusPlus($1,1,1);}
 	| ID OperatorMM {plusPlus($1,-1,1);}
 	| EXP_FUNCTIONCALL{};
 ;
@@ -729,12 +780,13 @@ void yyerror(const char *s) {
 }
 void help()
 {
-	printf("compiler help!\n\n\tout put file is \'output.mips\'\n\n");
+	printf("compiler help!\n\n\tenjoy own compiler!\n\n");
 			cout<<"\tfirst argument is source file path\n";
 			cout<<"\t--show enable some log in each compile step\n";
 			cout<<"\t--pre first pre process the source then compile it"<<endl;
-			cout<<"\t--def enable define out put for processor"<<endl;
-			cout<<"\t-o name name of preProcessor output"<<endl;
+			cout<<"\t--def enable define output for processor"<<endl;
+			cout<<"\t-p name of preProcessor c source output"<<endl;
+			cout<<"\t-o name of mips code output"<<endl;
 			cout<<"\t-h show help(this page!)"<<endl;
 
 }
@@ -745,6 +797,7 @@ int main(int argc, char *argv[])
 	strcpy(def," NoDef");
 	pre=0;
 	out=0;
+	mid=0;
 	if(argc<=1)
 	{
 		help();
@@ -764,6 +817,10 @@ int main(int argc, char *argv[])
 		{
 			out=i+1;
 		}
+		if(strcmp("-p",argv[i])==0 && (i+1<argc))
+		{
+			mid=i+1;
+		}
 		if(strcmp("--def",argv[i])==0)
 		{
 			def[0]=0;
@@ -777,16 +834,23 @@ int main(int argc, char *argv[])
 	}
 	if(pre)
 	{
-		if(out)
+		if(mid)
 		{
-			sprintf(cmd,"./pre %s %s %s",argv[1],argv[out],def);
+			sprintf(cmd,"./pre %s %s %s",argv[1],argv[mid],def);
 		}else
 			sprintf(cmd,"./pre %s output_pre.c %s",argv[1],def);
 		system(cmd);
-		yyin = fopen(argv[out], "r");
+		if(mid)
+			yyin = fopen(argv[mid], "r");
+		else
+			yyin = fopen("output_pre.c", "r");
 	}else
 		yyin = fopen(argv[1], "r");
-	f1=fopen("output.mips","w");
+	if(out)
+	{
+		f1=fopen(argv[out],"w");
+	}else
+		f1=fopen("output.mips","w");
 
 	/* print built in function*/
 	Node tmp=Node();
@@ -846,6 +910,18 @@ int main(int argc, char *argv[])
 	fclose(f1);
 	symbolTableShow();
 	cout<<"PC is: "<<PC<<endl;
+
+	if(verbose)
+	{
+		cout<<"starting program:"<<endl;
+		if(out)
+		{
+			sprintf(cmd,"spim  -file %s",argv[out]);
+			system(cmd);
+		}
+		else
+			system("spim  -file output.mips");
+	}
 	
     return 0;
 }

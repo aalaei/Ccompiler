@@ -354,7 +354,7 @@ void voidReturn(string name)
 {
 
     pb.push_back("lw $s0,96($gp)");
-    pb.push_back("subi $s0,$s0, "+to_string(symbolTable[name].size));
+    pb.push_back("addi $s0,$s0, "+to_string(-(symbolTable[name].size)));
     pb.push_back("sw $s0,96($gp)");
 
     pb.push_back("lw $ra, 0($sp)");  // pop to $ra

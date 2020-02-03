@@ -21,8 +21,8 @@ int main()
    {
      print(i);
    }*/
-   int c=scan();
-   for(int i=1;i!=c;i++)
+   int n=scan();
+   for(int i=1;i<=n;i++)
    {
      print(fib(i));
    }
