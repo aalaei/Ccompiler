@@ -59,6 +59,7 @@ stack<Node> my_redundant_stack;
 map<string,Node> symbolTable;
 int i=0;
 vector<string> pb;
+/*
 void makeFree(long long ad,int size=1)
 {
     for(int i=0;i<size;i++)
@@ -66,12 +67,13 @@ void makeFree(long long ad,int size=1)
         goodSpace.push(ad+4*i);
     }
 }
+*/
 long long getFree(int size=1)
 {
     long long res=Cur_Mem_tmp;
-    if(goodSpace.size()<size)
+    //if(goodSpace.size()<size)
         Cur_Mem_tmp += size*4;
-    else{
+    /*else{
         int max=0;
         res=goodSpace.top();
         vector<int> ar;
@@ -106,8 +108,17 @@ long long getFree(int size=1)
             Cur_Mem_tmp += size*4;
         }
         
-    }
+    }*/
     return res;
+}
+void pushNewFreeAddress()
+{
+    pb.push_back("lw $s0, 100($gp)");
+    pb.push_back("addi $sp,$sp,-4");
+    pb.push_back("sw $s0, 0($sp)");
+    pb.push_back("addi $s0,$s0,4");
+    pb.push_back("sw $s0, 100($gp)");
+
 }
 void push(int in)
 {
@@ -126,6 +137,7 @@ bool declare_IntVariable(string name,bool local=0)
     tmp.name=name;
     if(local)
     {
+        symbolTable[lastScope].size++;
         if(symbolTable[name].address!=0)
         {
             symbolTable[name].name=name;
@@ -168,6 +180,7 @@ bool declare_Function(string name,int numOfArguments,string type)
         tmp.TYPE=SEM_TYPE_FUNCTION_VOID;
     else return false;
     tmp.numOfArguments=numOfArguments;
+    tmp.size=10+numOfArguments;
     symbolTable[name]=tmp;
 
     char temp[500];
@@ -217,7 +230,15 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
         pb.push_back("addi $sp,$sp,-4");
         pb.push_back("sw $v0,0($sp)");
         return -10;
+    }//else if(name=="main")
+    //{
+        
+    else{
+        pb.push_back("lw $s0,96($gp)");
+        pb.push_back("addi $s0,$s0, "+to_string(symbolTable[name].size));
+        pb.push_back("sw $s0,96($gp)");
     }
+
     char tmp[500];
     
 	  if(symbolTable[name].TYPE<2)
@@ -261,9 +282,15 @@ void assignto(string ID)
     pb.push_back("lw $s0, 0($sp)"); 
     pb.push_back("addi $sp,$sp,4");
 
+    pb.push_back("lw $s1, 96($gp)"); 
+    pb.push_back("li $s2, "+to_string(var.address)); 
+    pb.push_back("add $s3, $s1, $s2"); 
+    pb.push_back("add $s3, $s3, $gp"); 
+    pb.push_back("sw $s0, 0($s3)"); 
+/*
     sprintf(tmp,"sw $s0, %llu($gp)",var.address);
     pb.push_back(tmp); 
-
+*/
 }
 void makeGolobal()
 {
@@ -287,13 +314,19 @@ void makeGolobal()
     pb.push_back("");
     pb.push_back("");
     pb.push_back("");
+    pb.push_back("");
+    pb.push_back("");
 	
 }
 void plusPlus(string ID,int sum)
 {
     char temp[500];
-    sprintf(temp,"lw $s0,%llu($gp)",symbolTable[ID].address);
-    pb.push_back(temp);
+    pb.push_back("lw $s1,96($gp)");
+    pb.push_back("add $s1,$s1,$gp");
+    pb.push_back("addi $s2,$s1, "+to_string(symbolTable[ID].address));
+    pb.push_back("lw $s0, 0($s2)");
+    //sprintf(temp,"lw $s0,%llu($gp)",symbolTable[ID].address);
+    //pb.push_back(temp);
     pb.push_back("li $s1, "+to_string(sum));
     pb.push_back("add $s2,$s0,$s1");
     pb.push_back("addi $sp, $sp,-4"); 
@@ -311,8 +344,13 @@ void removeItemFromSymbolTable(string cur)
         }
     }
 }
-void voidReturn()
+void voidReturn(string name)
 {
+
+    pb.push_back("lw $s0,96($gp)");
+    pb.push_back("subi $s0,$s0, "+to_string(symbolTable[name].size));
+    pb.push_back("sw $s0,96($gp)");
+
     pb.push_back("lw $ra, 0($sp)");  // pop to $ra
     pb.push_back("addi $sp, $sp,4"); 
 
@@ -320,7 +358,7 @@ void voidReturn()
     pb.push_back("sw $v0, 0($sp)"); 
     pb.push_back("jr $ra");
 }
-void returnHandle()
+void returnHandle(string name)
 {
     symbolTable[lastScope].output=1;
 
@@ -332,7 +370,7 @@ void returnHandle()
     pb.push_back("lw $v0, 0($sp)");    // pop to $v0
     }
     pb.push_back("addi $sp, $sp,4");
-    voidReturn();
+    voidReturn(name);
 }
 void functionFinished(int numberOfArguments,string ID)
 {
@@ -345,7 +383,7 @@ void functionFinished(int numberOfArguments,string ID)
         cur.print(1);
         printf("\n");
         my_redundant_stack.pop();
-        makeFree(cur.address,cur.size);
+        //makeFree(cur.address,cur.size);
         removeItemFromSymbolTable(cur.name);
     }
     while(!my_stack.empty())
@@ -353,6 +391,7 @@ void functionFinished(int numberOfArguments,string ID)
         Node tmp=my_stack.top();
         symbolTable[tmp.name]=tmp;
         my_stack.pop();
+        //pb.push_back("sw $s0,"+to_string(symbolTable[tmp.name].address)+"($gp)");
     }
     if(symbolTable[ID].TYPE==SEM_TYPE_FUNCTION_INT)
     {
@@ -379,7 +418,8 @@ void functionFinished(int numberOfArguments,string ID)
     pb.push_back("addi $sp, $sp,-4");  // push from $v0
     pb.push_back("sw $v0, 0($sp)"); 
     pb.push_back("jr $ra");*/
-    voidReturn();
+    
+    voidReturn(ID);
 }
 
 void save()
@@ -392,7 +432,7 @@ void save()
 void whileJump()
 {
     instJump.push(pb.size()+2);
-    pb[pop()]="beq $s0,$zero, "+to_string(pb.size()+2);
+    pb[pop()]="beq $s0,$zero, a"+to_string(pb.size()+2);
     int a=pop()+1;
     instJump.push(a);
     pb.push_back("j a"+to_string(a));
@@ -419,7 +459,7 @@ void saveJump()
     int top=pop();
     //int top_1=pop();
     
-    pb[top]="beq $s0,$zero, "+to_string(pb.size()+2);
+    pb[top]="beq $s0,$zero, a"+to_string(pb.size()+2);
     instJump.push(pb.size()+2);
     push(pb.size());
     pb.push_back("");

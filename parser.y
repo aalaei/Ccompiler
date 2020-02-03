@@ -5,7 +5,7 @@
  
 
  using namespace std;
- static long long Cur_Mem_tmp=100;
+ static long long Cur_Mem_tmp=104;
  bool verbose;
  bool pre;
  int out;
@@ -116,7 +116,13 @@ PROGRAM:
  {pb.push_back(".data:");
     pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
     pb.push_back("nextline_string: .asciiz \"\\n\"");
-    pb.push_back(".text:");}STMT_DECLARE {makeGolobal(); } PGM 
+    pb.push_back(".text:");
+	pb.push_back("li $s0, 500");
+	pb.push_back("sw $s0, 100($gp)");
+	pb.push_back("li $s0, 0");
+	pb.push_back("sw $s0, 96($gp)");
+
+	}STMT_DECLARE {makeGolobal(); } PGM 
  ;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
@@ -237,15 +243,14 @@ TERM9:
   {
 	//$$ = ($1)||($3);	 
 	pb.push_back("lw $s0, 0($sp)"); 
-	pb.push_back("addi $sp, $sp,4"); 
+	pb.push_back("addi $sp, $sp,4");
+
+	pb.push_back("lw $s1, 0($sp)"); 
+	pb.push_back("addi $sp, $sp,4");  
 	
 	pb.push_back("bne $s0,$zero,BinaryOR_True"+to_string(labelCnt)); //age sefr nabood boro be true
 	
-						 
-	pb.push_back("lw $s0, 0($sp)"); 
-	pb.push_back("addi $sp, $sp,4"); 
-	
-	pb.push_back("bne $s0,$zero,BinaryOR_True"+to_string(labelCnt)); //age sefr nabood boro be true
+	pb.push_back("bne $s1,$zero,BinaryOR_True"+to_string(labelCnt)); //age sefr nabood boro be true
 	//age false shod
 	pb.push_back("li $s0,0");  
 	pb.push_back("j BinaryOR_write"+to_string(labelCnt));  
@@ -267,15 +272,15 @@ TERM8:
 	//$$ = ($1)&&($3);	 
 	pb.push_back("lw $s0, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
-	
-	pb.push_back("beq $s0,$zero,BinaryAnd_False"+to_string(labelCnt)); //age sefr bood boro be false
-	
-	
-		 					 
-	pb.push_back("lw $s0, 0($sp)"); 
+
+			 					 
+	pb.push_back("lw $s1, 0($sp)"); 
 	pb.push_back("addi $sp, $sp,4"); 
 	
 	pb.push_back("beq $s0,$zero,BinaryAnd_False"+to_string(labelCnt)); //age sefr bood boro be false
+	
+	
+	pb.push_back("beq $s1,$zero,BinaryAnd_False"+to_string(labelCnt)); //age sefr bood boro be false
 	
 	//age hardo sefr naboodan yani javab true mishod					 
 	
@@ -656,8 +661,12 @@ FACTOR:
 			error("variable has not been declared properly!");
 			exit(-10);
 		}
-		sprintf(temp,"lw $s0,%llu($gp)",symbolTable[$1].address);
-		pb.push_back(temp);
+		pb.push_back("lw $s1,96($gp)");
+		pb.push_back("addi $s2,$s1,"+to_string(symbolTable[$1].address));
+		pb.push_back("add $s2,$s2,$gp");
+		pb.push_back("lw $s0,0($s2)");
+		//sprintf(temp,"lw $s0,%llu($gp)",symbolTable[$1].address);
+		//pb.push_back(temp);
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
 	}
@@ -694,8 +703,8 @@ STMT_ASSIGN:
  
 ;
 STMT_RETURN:
- returnKeyWord EXP Semicolon{returnHandle();}
- |returnKeyWord Semicolon{voidReturn();}
+ returnKeyWord EXP Semicolon{returnHandle(lastScope);}
+ |returnKeyWord Semicolon{voidReturn(lastScope);}
 ;
 TYPE:
  IntKeyWord {strcpy($$,"int"); }
@@ -792,11 +801,13 @@ int main(int argc, char *argv[])
 	if(PC!=0)
 	{
 		return_address=pop();
-		pb[return_address]="jal main";
-		pb[return_address+1]="li $v0, 17";
-		pb[return_address+2]="lw $a0, 0($sp)";
-		pb[return_address+3]="addi $sp, $sp,4";
-		pb[return_address+4]="syscall";
+		pb[return_address]="li $s0,500";
+		pb[return_address+1]="sw $s0, 96($gp)";
+		pb[return_address+2]="jal main";
+		pb[return_address+3]="li $v0, 17";
+		pb[return_address+4]="lw $a0, 0($sp)";
+		pb[return_address+5]="addi $sp, $sp,4";
+		pb[return_address+6]="syscall";
 	}	
 	else{
 		error("main function Not Found!");
