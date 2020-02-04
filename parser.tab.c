@@ -2331,25 +2331,25 @@ yyreduce:
 
   case 88:
 #line 764 "parser.y" /* yacc.c:1646  */
-    {plusPlus((yyvsp[-1].name),1,1);}
+    {(yyval.iVal)=123;plusPlus((yyvsp[-1].name),1,1);}
 #line 2336 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 89:
 #line 765 "parser.y" /* yacc.c:1646  */
-    {plusPlus((yyvsp[-1].name),-1,1);}
+    {(yyval.iVal)=123;plusPlus((yyvsp[-1].name),-1,1);}
 #line 2342 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
 #line 766 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal)=123;}
+    {(yyval.iVal)=123;plusPlusar((yyvsp[-4].name),1,1);}
 #line 2348 "parser.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
 #line 767 "parser.y" /* yacc.c:1646  */
-    {(yyval.iVal)=123;}
+    {(yyval.iVal)=123;plusPlusar((yyvsp[-4].name),-1,1);}
 #line 2354 "parser.tab.c" /* yacc.c:1646  */
     break;
 

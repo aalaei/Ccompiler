@@ -384,6 +384,37 @@ void plusPlus(string ID,int sum,bool stayInStack=0)
     
     assignto(ID);
 }
+void plusPlusar(string ID,int sum,bool stayInStack=0)
+{
+    pb.push_back("lw $s2,0($sp)"); // index to s2
+    pb.push_back("addi $sp, $sp,4"); 
+
+    pb.push_back("li $s1, 4"); 
+
+    pb.push_back("mul $s1,$s2,$s1");
+    if(symbolTable[ID].TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
+    {
+        error("array is not declared yet!!");
+        exit(-14);
+    }
+
+    pb.push_back("add $s1,$s1,$gp");
+    pb.push_back("addi $s2,$s1, "+to_string(symbolTable[ID].address));
+    pb.push_back("lw $s0, 0($s2)");
+    //sprintf(temp,"lw $s0,%llu($gp)",symbolTable[ID].address);
+    //pb.push_back(temp);
+    //pb.push_back("li $s1, "+to_string(sum));
+    pb.push_back("addi $s2,$s0, "+to_string(sum));
+    if(stayInStack)
+    {
+        pb.push_back("addi $sp, $sp,-4"); 
+        pb.push_back("sw $s0,0($sp)");
+    }
+    pb.push_back("addi $sp, $sp,-4"); 
+    pb.push_back("sw $s2,0($sp)");
+    
+    assignto(ID);
+}
 void removeItemFromSymbolTable(string cur)
 {
     

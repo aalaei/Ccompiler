@@ -761,10 +761,10 @@ FACTOR:
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
 	}
-	| ID OperatorPP {plusPlus($1,1,1);}
-	| ID OperatorMM {plusPlus($1,-1,1);}
-	| ID OpenBracket EXP CloseBracket OperatorPP{$$=123;}
-	| ID OpenBracket EXP CloseBracket OperatorMM{$$=123;}
+	| ID OperatorPP {$$=123;plusPlus($1,1,1);}
+	| ID OperatorMM {$$=123;plusPlus($1,-1,1);}
+	| ID OpenBracket EXP CloseBracket OperatorPP{$$=123;plusPlusar($1,1,1);}
+	| ID OpenBracket EXP CloseBracket OperatorMM{$$=123;plusPlusar($1,-1,1);}
 	| EXP_FUNCTIONCALL{};
 ;
 
