@@ -1,11 +1,11 @@
 int reza=2;
 #include "ali.h"
-/*
+
 int x(a,b)
 {
-    return a+b;
+    return a-b;
 }
-*/
+
 int main()
 {
 //
@@ -22,9 +22,17 @@ int main()
      print(i);
    }*/
    int n=scan();
+   int ar[10];
    for(int i=1;i<=n;i++)
    {
-     print(fib(i));
+     ar[i] = (x(fib(i),1));
+     print(ar[i]);
+
+   }
+   print(99);
+   while(n>=1)
+   {
+    print(ar[n--]);
    }
    
    

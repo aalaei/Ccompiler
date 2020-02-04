@@ -79,7 +79,9 @@ extern int yydebug;
     BinaryAnd = 289,
     BinaryNot = 290,
     UnaryNot = 291,
-    ID = 292
+    ID = 292,
+    OpenBracket = 293,
+    CloseBracket = 294
   };
 #endif
 
@@ -88,13 +90,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 44 "parser.y" /* yacc.c:1909  */
+#line 48 "parser.y" /* yacc.c:1909  */
 
 	int iVal;
 	char name[100];
 	long long address;
 
-#line 98 "parser.tab.h" /* yacc.c:1909  */
+#line 100 "parser.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

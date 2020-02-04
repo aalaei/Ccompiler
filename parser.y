@@ -25,7 +25,11 @@
  {
 	 printf("warning :\n\t%s\n> line number: #%d",warn,yylineNum+1);
  }
- 
+ #define MAIN_OFFSET 200
+ #define ARRAY_OFFSET 1000
+ #define DYNAMIC_OFFSET_LOC 96
+ static long long ARRAY_CNT=ARRAY_OFFSET;
+
  #include "myDef.h"
  
  extern FILE* yyin;
@@ -85,6 +89,9 @@
 
 %token <name> ID
 
+%token <name> OpenBracket
+%token <name> CloseBracket
+
 %type <name> STMT_DECLARE PGM TYPE STMT_WHILE STMT_FOR
 %type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE //STMT_CONDITIONAL
 %type <name> STMT_ASSIGN STMT_RETURN
@@ -119,12 +126,11 @@ PROGRAM:
     pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
     pb.push_back("nextline_string: .asciiz \"\\n\"");
     pb.push_back(".text");
-	pb.push_back("li $s0, 500");
-	pb.push_back("sw $s0, 100($gp)");
+	/*pb.push_back("li $s0, 200");
+	pb.push_back("sw $s0, 100($gp)");*/
 	pb.push_back("li $s0, 0");
-	pb.push_back("sw $s0, 96($gp)");
-
-	}STMT_DECLARE {makeGolobal(); } PGM 
+	pb.push_back("sw $s0, "+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
+	}STMT_DECLARE {makeGolobal(); } PGM
  ;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
@@ -719,7 +725,11 @@ FACTOR:
 			error("variable has not been declared properly!");
 			exit(-10);
 		}
-		pb.push_back("lw $s1,96($gp)");
+		if(symbolTable[$1].scope==0)
+		{
+			pb.push_back("li $s1,0");
+		}else
+			pb.push_back("lw $s1,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
 		pb.push_back("addi $s2,$s1,"+to_string(symbolTable[$1].address));
 		pb.push_back("add $s2,$s2,$gp");
 		pb.push_back("lw $s0,0($s2)");
@@ -729,13 +739,38 @@ FACTOR:
 		pb.push_back("sw $s0,0($sp)");
 		
 	}
+	| ID OpenBracket EXP CloseBracket {
+		$$ = 123; 
+		char temp[500];
+		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
+		{
+			error("variable has not been declared properly!");
+			exit(-10);
+		}
+		pb.push_back("lw $s0,0($sp)");
+		pb.push_back("addi $sp, $sp,4"); 
+
+		pb.push_back("li $s4, 4"); //4
+		pb.push_back("mul $s0,$s0, $s4");
+
+		pb.push_back("add $s1,$s0,$gp");
+
+		pb.push_back("lw $s0,"+to_string(symbolTable[$1].address)+"($s1)");
+
+
+		pb.push_back("addi $sp, $sp,-4"); 
+		pb.push_back("sw $s0,0($sp)");
+	}
 	| ID OperatorPP {plusPlus($1,1,1);}
 	| ID OperatorMM {plusPlus($1,-1,1);}
+	| ID OpenBracket EXP CloseBracket OperatorPP{$$=123;}
+	| ID OpenBracket EXP CloseBracket OperatorMM{$$=123;}
 	| EXP_FUNCTIONCALL{};
 ;
 
 STMT_DECLARE:
  IntKeyWord ID {declare_IntVariable($2);} IDS Semicolon
+ |IntKeyWord ID OpenBracket NUM CloseBracket {declare_IntArray($2,$4);}  Semicolon
  |IntKeyWord ID {declare_IntVariable($2);} OperatorAssign EXP Semicolon {assignto($2);}
 ;
 EXP_FUNCTIONCALL:
@@ -753,8 +788,9 @@ IDS:
 STMT_ASSIGN:
 
  ID OperatorAssign EXP Semicolon { assignto($1);}
- | ID OperatorPP  Semicolon {plusPlus($1,1);}
- | ID OperatorMM  Semicolon {plusPlus($1,-1);}
+ | ID OpenBracket EXP CloseBracket OperatorAssign EXP Semicolon { assigntoar($1);}
+ //| ID OperatorPP  Semicolon {plusPlus($1,1);}
+ //| ID OperatorMM  Semicolon {plusPlus($1,-1);}
  | EXP Semicolon 
  {
 	pb.push_back("lw $v1, 0($sp)");
@@ -876,8 +912,8 @@ int main(int argc, char *argv[])
 	if(PC!=0)
 	{
 		return_address=pop();
-		pb[return_address]="li $s0,500";
-		pb[return_address+1]="sw $s0, 96($gp)";
+		pb[return_address]="li $s0,"+to_string(MAIN_OFFSET);
+		pb[return_address+1]="sw $s0, "+to_string(DYNAMIC_OFFSET_LOC)+"($gp)";
 		pb[return_address+2]="jal main";
 		pb[return_address+3]="li $v0, 17";
 		pb[return_address+4]="lw $a0, 0($sp)";
@@ -891,11 +927,15 @@ int main(int argc, char *argv[])
 	while(!instJump.empty())
 	{
 		int top=instJump.top();
-		pb[top-1]="a"+to_string(top)+": "+pb[top-1];
+		string ap="a"+to_string(top)+":";
+		
+		if (pb[top-1].rfind(ap, 0) != 0) {
+			pb[top-1]="a"+to_string(top)+": "+pb[top-1];
+		}
 		instJump.pop();
 	}
 	
-	printf("MIPS CODE is saves in output file!\n");
+	printf("MIPS CODE is saved in output file!\n");
 	if(verbose)
 		printf("Code:\n");
 	for(int j=0;j<pb.size();j++)

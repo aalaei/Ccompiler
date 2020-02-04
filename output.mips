@@ -240,11 +240,11 @@ sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
 lw $s1, 96($gp)
-addi $s3, $s1, 164
+addi $s3, $s1, 124
 add $s3, $s3, $gp
 sw $s0, 0($s3)
 a246: lw $s1,96($gp)
-addi $s2,$s1,164
+addi $s2,$s1,124
 add $s2,$s2,$gp
 lw $s0,0($s2)
 addi $sp, $sp,-4
@@ -266,11 +266,11 @@ addi $sp, $sp,-4
 sw $s0,0($sp)
 lw $s0, 0($sp)
 addi $sp, $sp,4
-beq $s0,$zero, a348
+beq $s0,$zero, a319
 j a289
 a271: lw $s1,96($gp)
 add $s1,$s1,$gp
-addi $s2,$s1, 164
+addi $s2,$s1, 124
 lw $s0, 0($s2)
 addi $s2,$s0, 1
 addi $sp, $sp,-4
@@ -280,20 +280,14 @@ sw $s2,0($sp)
 lw $s0, 0($sp)
 addi $sp,$sp,4
 lw $s1, 96($gp)
-addi $s3, $s1, 164
+addi $s3, $s1, 124
 add $s3, $s3, $gp
 sw $s0, 0($s3)
 lw $v1, 0($sp)
 addi $sp, $sp,4
 j a246
 a289: lw $s1,96($gp)
-addi $s2,$s1,164
-add $s2,$s2,$gp
-lw $s0,0($s2)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-lw $s1,96($gp)
-addi $s2,$s1,164
+addi $s2,$s1,124
 add $s2,$s2,$gp
 lw $s0,0($s2)
 addi $sp, $sp,-4
@@ -309,29 +303,6 @@ lw $s0,96($gp)
 addi $s0,$s0, 28
 sw $s0,96($gp)
 jal x
-lw $s0, 0($sp)
-addi $sp,$sp,4
-lw $s1, 0($sp)
-addi $sp,$sp,4
-li $s4, 4
-mul $s1, $s1, $s4
-addi $s3, $s1, 1000
-add $s3, $s3, $gp
-sw $s0, 0($s3)
-lw $s1,96($gp)
-addi $s2,$s1,164
-add $s2,$s2,$gp
-lw $s0,0($s2)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-lw $s0,0($sp)
-addi $sp, $sp,4
-li $s4, 4
-mul $s0,$s0, $s4
-add $s1,$s0,$gp
-lw $s0,1000($s1)
-addi $sp, $sp,-4
-sw $s0,0($sp)
 li $v0,1
 lw $a0,0($sp)
 addi $sp,$sp,4
@@ -345,79 +316,7 @@ sw $v0,0($sp)
 lw $v1, 0($sp)
 addi $sp, $sp,4
 j a271
-a348: li $s0 , 99
-addi $sp,$sp,-4
-sw $s0,0($sp)
-li $v0,1
-lw $a0,0($sp)
-addi $sp,$sp,4
-syscall
-li $v0,4
-la $a0,nextline_string
-syscall
-li $v0,0
-addi $sp,$sp,-4
-sw $v0,0($sp)
-lw $v1, 0($sp)
-addi $sp, $sp,4
-a363: lw $s1,96($gp)
-addi $s2,$s1,120
-add $s2,$s2,$gp
-lw $s0,0($s2)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-li $s0 , 1
-addi $sp,$sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-lw $s1, 0($sp)
-addi $sp, $sp,4
-slt $s0,$s1, $s0
-neg $s0,$s0
-addi $s0,$s0,1
-addi $sp, $sp,-4
-sw $s0,0($sp)
-lw $s0, 0($sp)
-addi $sp, $sp,4
-beq $s0,$zero, a420
-lw $s1,96($gp)
-add $s1,$s1,$gp
-addi $s2,$s1, 120
-lw $s0, 0($s2)
-addi $s2,$s0, -1
-addi $sp, $sp,-4
-sw $s0,0($sp)
-addi $sp, $sp,-4
-sw $s2,0($sp)
-lw $s0, 0($sp)
-addi $sp,$sp,4
-lw $s1, 96($gp)
-addi $s3, $s1, 120
-add $s3, $s3, $gp
-sw $s0, 0($s3)
-lw $s0,0($sp)
-addi $sp, $sp,4
-li $s4, 4
-mul $s0,$s0, $s4
-add $s1,$s0,$gp
-lw $s0,1000($s1)
-addi $sp, $sp,-4
-sw $s0,0($sp)
-li $v0,1
-lw $a0,0($sp)
-addi $sp,$sp,4
-syscall
-li $v0,4
-la $a0,nextline_string
-syscall
-li $v0,0
-addi $sp,$sp,-4
-sw $v0,0($sp)
-lw $v1, 0($sp)
-addi $sp, $sp,4
-j a363
-a420: li $v0,0
+a319: li $v0,0
 lw $s0,96($gp)
 addi $s0,$s0, -12
 sw $s0,96($gp)

@@ -51,6 +51,12 @@ alpha ([a-zA-Z])([a-zA-Z0-9]*)
 "\(" {
     return OpenParenthesis;
 }
+"[" {
+    return OpenBracket;
+}
+"]" {
+    return CloseBracket;
+}
 "\)" {
     return CloseParenthesis;
 }

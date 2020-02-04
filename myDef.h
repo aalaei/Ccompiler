@@ -18,8 +18,9 @@ stack<int> instJump;
 
 extern string lastScope;
 enum SemanticType{
-    NONE,
-    SEM_TYPE_VARIABLE_INT
+    NONE
+    ,SEM_TYPE_VARIABLE_INT
+    ,SEM_TYPE_VARIABLE_ARRAY_INT
     ,SEM_TYPE_FUNCTION_INT
     ,SEM_TYPE_FUNCTION_VOID
 };
@@ -35,6 +36,8 @@ private:
             return "int_function";
         else if (TYPE==SEM_TYPE_FUNCTION_VOID)
             return "void_function";
+        else if(TYPE==SEM_TYPE_VARIABLE_ARRAY_INT)
+            return "int_arrayVar";
     }
 public:
 
@@ -68,9 +71,16 @@ void makeFree(long long ad,int size=1)
     }
 }
 */
-long long getFree(int size=1)
+long long getFree(int size=1,bool array=0)
 {
     long long res=Cur_Mem_tmp;
+    if(array)
+    {
+        res=ARRAY_CNT;
+        Cur_Mem_tmp += size*4;
+        return res;
+
+    }
     //if(goodSpace.size()<size)
         Cur_Mem_tmp += size*4;
     /*else{
@@ -111,6 +121,7 @@ long long getFree(int size=1)
     }*/
     return res;
 }
+/*
 void pushNewFreeAddress()
 {
     pb.push_back("lw $s0, 100($gp)");
@@ -120,6 +131,7 @@ void pushNewFreeAddress()
     pb.push_back("sw $s0, 100($gp)");
 
 }
+*/
 void push(int in)
 {
     semantic_stack.push(in);
@@ -137,7 +149,7 @@ bool declare_IntVariable(string name,bool local=0)
     tmp.name=name;
     if(local)
     {
-        symbolTable[lastScope].size++;
+        symbolTable[lastScope].size+=4;
         if(symbolTable[name].address!=0)
         {
             symbolTable[name].name=name;
@@ -180,7 +192,7 @@ bool declare_Function(string name,int numOfArguments,string type)
         tmp.TYPE=SEM_TYPE_FUNCTION_VOID;
     else return false;
     tmp.numOfArguments=numOfArguments;
-    tmp.size=10+numOfArguments;
+    tmp.size=12+numOfArguments*4;
     symbolTable[name]=tmp;
 
     char temp[500];
@@ -234,19 +246,19 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
     //{
         
     else{
-        pb.push_back("lw $s0,96($gp)");
+        pb.push_back("lw $s0,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
         pb.push_back("addi $s0,$s0, "+to_string(symbolTable[name].size));
-        pb.push_back("sw $s0,96($gp)");
+        pb.push_back("sw $s0,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
     }
 
     char tmp[500];
     
-	  if(symbolTable[name].TYPE<2)
+	  if(symbolTable[name].TYPE<3)
 	  {
 		  if(symbolTable[name].TYPE==0)
             sprintf(tmp,"error in function call!!\n\tundeclared function!!\n");
           else
-		    sprintf(tmp,"error in function call!!\n\texpected symbol type: 2 or 3 but type is %d\n",symbolTable[name].TYPE);
+		    sprintf(tmp,"error in function call!!\n\texpected symbol type: 3 or 4 but type is %d\n",symbolTable[name].TYPE);
           error(tmp);
 		  exit(-2);
 	  }
@@ -282,9 +294,39 @@ void assignto(string ID)
     pb.push_back("lw $s0, 0($sp)"); 
     pb.push_back("addi $sp,$sp,4");
 
-    pb.push_back("lw $s1, 96($gp)"); 
-    pb.push_back("li $s2, "+to_string(var.address)); 
-    pb.push_back("add $s3, $s1, $s2"); 
+    if(var.scope==0)
+    {
+        pb.push_back("li $s1, 0"); 
+    }else
+        pb.push_back("lw $s1, "+to_string(DYNAMIC_OFFSET_LOC)+"($gp)"); 
+    pb.push_back("addi $s3, $s1, "+to_string(var.address)); 
+    pb.push_back("add $s3, $s3, $gp"); 
+    pb.push_back("sw $s0, 0($s3)"); 
+/*
+    sprintf(tmp,"sw $s0, %llu($gp)",var.address);
+    pb.push_back(tmp); 
+*/
+}
+void assigntoar(string ID)
+{
+    char tmp[500];
+    Node var=symbolTable[ID];
+    if(var.TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
+    {
+        error("variable has not been declared properly!");
+        exit(-10);
+    }
+    pb.push_back("lw $s0, 0($sp)"); // value 
+    pb.push_back("addi $sp,$sp,4");
+
+    pb.push_back("lw $s1, 0($sp)");  //index
+    pb.push_back("addi $sp,$sp,4");
+
+    pb.push_back("li $s4, 4"); // 4
+    pb.push_back("mul $s1, $s1, $s4"); // *4
+
+    
+    pb.push_back("addi $s3, $s1, "+to_string(var.address)); 
     pb.push_back("add $s3, $s3, $gp"); 
     pb.push_back("sw $s0, 0($s3)"); 
 /*
@@ -321,7 +363,10 @@ void makeGolobal()
 void plusPlus(string ID,int sum,bool stayInStack=0)
 {
     char temp[500];
-    pb.push_back("lw $s1,96($gp)");
+    if(symbolTable[ID].scope==0)
+        pb.push_back("li $s1, 0");    
+    else
+        pb.push_back("lw $s1,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
     pb.push_back("add $s1,$s1,$gp");
     pb.push_back("addi $s2,$s1, "+to_string(symbolTable[ID].address));
     pb.push_back("lw $s0, 0($s2)");
@@ -353,9 +398,9 @@ void removeItemFromSymbolTable(string cur)
 void voidReturn(string name)
 {
 
-    pb.push_back("lw $s0,96($gp)");
+    pb.push_back("lw $s0,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
     pb.push_back("addi $s0,$s0, "+to_string(-(symbolTable[name].size)));
-    pb.push_back("sw $s0,96($gp)");
+    pb.push_back("sw $s0,"+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
 
     pb.push_back("lw $ra, 0($sp)");  // pop to $ra
     pb.push_back("addi $sp, $sp,4"); 
@@ -480,6 +525,17 @@ void fun_var(string name,int i)
     pb.push_back(temp); 
     assignto(name);
     
+}
+void declare_IntArray(string name,int ss)
+{
+    Node tmp=Node();
+    tmp.name=name;
+    tmp.size=ss;
+    tmp.scope=0;
+    tmp.address=getFree(ss,1);
+    tmp.numOfArguments=-1;
+    tmp.TYPE=SEM_TYPE_VARIABLE_ARRAY_INT;
+    symbolTable[name]=tmp;
 }
 void symbolTableShow()
 {
