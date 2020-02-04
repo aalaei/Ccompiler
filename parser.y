@@ -8,6 +8,7 @@
  static long long Cur_Mem_tmp=104;
  bool verbose;
  bool pre;
+ bool ERROR_occurred=0;
  int out;
  int mid;
  int yylineNum=0;
@@ -15,15 +16,17 @@
  int labelCnt=0;
 
  void yyerror(const char* error);
- void error(const char * error)
+ void myerror(const char * er,int errCode)
  {
 	 char temp[500];
-	 sprintf(temp,"error :\n\t%s\n> line number: #%d",error,yylineNum+1);
-	 yyerror(temp);
+	 sprintf(temp,"error occurred Code %d :\n\t%s\n> line number: #%d\n",-errCode,er,yylineNum+1);
+	 yyerror(temp);	 
+	 ERROR_occurred=1;
+
  }
  void warning(const char * warn)
  {
-	 printf("warning :\n\t%s\n> line number: #%d",warn,yylineNum+1);
+	 printf("warning :\n\t%s\n> line number: #%d\n",warn,yylineNum+1);
  }
  #define MAIN_OFFSET 200
  #define ARRAY_OFFSET 1000
@@ -92,7 +95,7 @@
 %token <name> OpenBracket
 %token <name> CloseBracket
 
-%type <name> STMT_DECLARE PGM TYPE STMT_WHILE STMT_FOR
+%type <name> STMT_DECLARE STMT_DECLARE_L STMT_DECLARE_ASSL PGM TYPE STMT_WHILE STMT_FOR
 %type <name> STMT STMTS matched unmatched other_statement IF IF_ELSE //STMT_CONDITIONAL
 %type <name> STMT_ASSIGN STMT_RETURN
 %type <name> IDS
@@ -117,41 +120,38 @@
 
 //%left '+' '-' //'*' '/'
 //%right '*' '/'
-%right OperatorPP OperatorMM
-%right ID
+//%right OperatorPP OperatorMM
+//%right ID
 
 %%
 PROGRAM:
- {pb.push_back(".data");
-    pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
-    pb.push_back("nextline_string: .asciiz \"\\n\"");
-    pb.push_back(".text");
-	/*pb.push_back("li $s0, 200");
-	pb.push_back("sw $s0, 100($gp)");*/
-	pb.push_back("li $s0, 0");
-	pb.push_back("sw $s0, "+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
-	}STMT_DECLARE {makeGolobal(); } PGM
+	STMT_DECLARE {makeGolobal(); } PGM
+	/*| PGM*/
  ;
+ 
+
+;
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
  	 {declare_Function($2,0,$1);}
-	  OpenBrace STMTS CloseBrace{ functionFinished(0,$2);} PGM |
+	  BLOCK{ functionFinished(0,$2);} PGM |
  TYPE ID OpenParenthesis ID CloseParenthesis 
  	 {declare_Function($2,1,$1);}{fun_var($4,1);}
-	  OpenBrace STMTS CloseBrace{ functionFinished(1,$2);} PGM |
+	  BLOCK{ functionFinished(1,$2);} PGM |
  TYPE ID OpenParenthesis ID Comma ID CloseParenthesis 
  	 {declare_Function($2,2,$1);}{fun_var($4,1);fun_var($6,2);}
-	  OpenBrace STMTS CloseBrace{ functionFinished(2,$2);}PGM |
+	  BLOCK{ functionFinished(2,$2);}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis 
  	 {declare_Function($2,3,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);}
-	  OpenBrace STMTS CloseBrace { functionFinished(3,$2);}PGM |
+	  BLOCK { functionFinished(3,$2);}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis 
  	 {declare_Function($2,4,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);fun_var($10,4);}
-	  OpenBrace STMTS CloseBrace { functionFinished(4,$2);}PGM |
+	  BLOCK { functionFinished(4,$2);}PGM |
   /*nothing!*/{}
  ;
 STMTS:
  STMT STMTS | {}
+ //| CloseBrace {myerror("} is extra!!",21);yyerrok;} 
  ;
 STMT:
  matched
@@ -167,7 +167,7 @@ other_statement:
  Semicolon{semantic_stack.top();}
 ;
 STMT_WHILE:
- whileKeyWord OpenParenthesis{push(pb.size());} EXP CloseParenthesis {save();} OpenBrace STMTS CloseBrace {whileJump();}
+ whileKeyWord OpenParenthesis{push(pb.size());} EXP CloseParenthesis {save();} BLOCK {whileJump();}
 
 ;
 /*
@@ -195,10 +195,9 @@ STMT_FOR:
 	 pb.push_back("j a"+to_string(b));
 	 instJump.push(b);
 	 push(a);
-  }  CloseParenthesis OpenBrace STMTS CloseBrace
+  }  CloseParenthesis BLOCK
   {forJump();}
-  |
-  forKeyWord OpenParenthesis STMT_ASSIGN {push(pb.size());} EXP Semicolon 
+  | forKeyWord OpenParenthesis STMT_ASSIGN {push(pb.size());} EXP Semicolon 
  {	
 	 save();
 	 pb.push_back("");
@@ -213,7 +212,7 @@ STMT_FOR:
 	 pb.push_back("j a"+to_string(b));
 	 instJump.push(b);
 	 push(a);
-  }  CloseParenthesis OpenBrace STMTS CloseBrace
+  }  CloseParenthesis BLOCK
   {forJump();}
   
 ;
@@ -249,8 +248,9 @@ IF_ELSE:
 IF:
 	ifKeyWord OpenParenthesis EXP CloseParenthesis {save();}
 ;
-BLOCK :
+BLOCK:
  OpenBrace STMTS CloseBrace
+ |OpenBrace STMTS error {myerror("} is missing!!",21);} CloseBrace
 ;
 
 EXP:
@@ -623,8 +623,8 @@ TERM:
 
 	if($3==0)
 	{
-		error("divide by zero error!!");
-		exit(-100);
+		myerror("divide by zero error!!",100);
+		
 	}
  	$$ = ($1) / ($3);
 	pb.push_back("lw $s0, 0($sp)"); 
@@ -722,8 +722,8 @@ FACTOR:
 		char temp[500];
 		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_INT)
 		{
-			error("variable has not been declared properly!");
-			exit(-10);
+			myerror("variable has not been declared properly!",10);
+			
 		}
 		if(symbolTable[$1].scope==0)
 		{
@@ -744,8 +744,8 @@ FACTOR:
 		char temp[500];
 		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
 		{
-			error("variable has not been declared properly!");
-			exit(-10);
+			myerror("variable has not been declared properly!",10);
+			
 		}
 		pb.push_back("lw $s0,0($sp)");
 		pb.push_back("addi $sp, $sp,4"); 
@@ -761,18 +761,31 @@ FACTOR:
 		pb.push_back("addi $sp, $sp,-4"); 
 		pb.push_back("sw $s0,0($sp)");
 	}
-	| ID OperatorPP {$$=123;plusPlus($1,1,1);}
-	| ID OperatorMM {$$=123;plusPlus($1,-1,1);}
-	| ID OpenBracket EXP CloseBracket OperatorPP{$$=123;plusPlusar($1,1,1);}
-	| ID OpenBracket EXP CloseBracket OperatorMM{$$=123;plusPlusar($1,-1,1);}
+	| ID OperatorPP {$$=-10;plusPlus($1,1,1);}
+	| ID OperatorMM {$$=-10;plusPlus($1,-1,1);}
+	| ID OpenBracket EXP CloseBracket OperatorPP{$$=-10;plusPlusar($1,1,1);}
+	| ID OpenBracket EXP CloseBracket OperatorMM{$$=-10;plusPlusar($1,-1,1);}
 	| EXP_FUNCTIONCALL{};
 ;
 
 STMT_DECLARE:
- IntKeyWord ID {declare_IntVariable($2);} IDS Semicolon
+STMT_DECLARE_L Semicolon
+|STMT_DECLARE_L error {myerror("error after declaration!",30);}
+ //IntKeyWord ID {declare_IntVariable($2);} IDS Semicolon
+ //|IntKeyWord ID {declare_IntVariable($2);} IDS error {myerror("; after variable declaration is missed!",20);}
+
  |IntKeyWord ID OpenBracket NUM CloseBracket {declare_IntArray($2,$4);}  Semicolon
- |IntKeyWord ID {declare_IntVariable($2);} OperatorAssign EXP Semicolon {assignto($2);}
+ |IntKeyWord ID OpenBracket NUM CloseBracket  error {myerror("; after array declaration is missed!",20);}
+ |STMT_DECLARE_ASSL Semicolon
+ |STMT_DECLARE_ASSL error {myerror("; after array declaration is missed!",20);}
 ;
+STMT_DECLARE_ASSL:
+IntKeyWord ID {declare_IntVariable($2);} OperatorAssign EXP  {assignto($2);}
+;
+STMT_DECLARE_L:
+IntKeyWord ID {declare_IntVariable($2);} IDS
+;
+
 EXP_FUNCTIONCALL:
  ID OpenParenthesis  CloseParenthesis {$$=functionCall($1,0);}
  | ID OpenParenthesis EXP CloseParenthesis {$$=functionCall($1,1,$3);}
@@ -788,7 +801,9 @@ IDS:
 STMT_ASSIGN:
 
  ID OperatorAssign EXP Semicolon { assignto($1);}
+ | ID OperatorAssign EXP error { myerror("; after assignment is missed!",20);}
  | ID OpenBracket EXP CloseBracket OperatorAssign EXP Semicolon { assigntoar($1);}
+ | ID OpenBracket EXP CloseBracket OperatorAssign EXP error{ myerror("; after assinment is missed!",20);}
  //| ID OperatorPP  Semicolon {plusPlus($1,1);}
  //| ID OperatorMM  Semicolon {plusPlus($1,-1);}
  | EXP Semicolon 
@@ -798,11 +813,13 @@ STMT_ASSIGN:
 	if($1!=-10)
 		warning("useless epression!");
   } // pop useless result!!
+  | EXP error {myerror("; is missed!",20);}
  
 ;
 STMT_RETURN:
  returnKeyWord EXP Semicolon{returnHandle(lastScope);}
  |returnKeyWord Semicolon{voidReturn(lastScope);}
+ | returnKeyWord error {myerror("probably ; is missed after return",20);}
 ;
 TYPE:
  IntKeyWord {strcpy($$,"int"); }
@@ -901,12 +918,23 @@ int main(int argc, char *argv[])
 	symbolTable["scan"]=tmp;
 	/**/
 
+	/*initial codes */
+
+	pb.push_back(".data");
+    pb.push_back("err_string: .asciiz \"\\ndivide by zero error!\\n\"");
+    pb.push_back("nextline_string: .asciiz \"\\n\"");
+    pb.push_back(".text");
+	/*pb.push_back("li $s0, 200");
+	pb.push_back("sw $s0, 100($gp)");*/
+	pb.push_back("li $s0, 0");
+	pb.push_back("sw $s0, "+to_string(DYNAMIC_OFFSET_LOC)+"($gp)");
+
+	/*finished!!*/
     if(!yyparse())
 		printf("\nParsing complete\n");
 	else
 	{
-		printf("\nParsing failed\n");
-		exit(-1);
+		myerror("\nParsing failed\n",1);
 	}
 	int return_address;
 	if(PC!=0)
@@ -921,9 +949,11 @@ int main(int argc, char *argv[])
 		pb[return_address+6]="syscall";
 	}	
 	else{
-		error("main function Not Found!");
-		exit(-4);
+		myerror("main function Not Found!",4);
+		
 	}
+	if(ERROR_occurred)
+		return -1;
 	while(!instJump.empty())
 	{
 		int top=instJump.top();

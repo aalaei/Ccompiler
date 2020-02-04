@@ -179,8 +179,8 @@ bool declare_Function(string name,int numOfArguments,string type)
     lastScope=name;
     if(name=="print" || name=="scan" )
     {
-        error("reserved Function!!");
-        exit(-8);
+        myerror("reserved Function!!",8);
+        
     }
     if(name=="main")
     {
@@ -259,14 +259,12 @@ int functionCall(string name,int numOfArgs,int  arg0=0,int  arg1=0,int  arg2=0,i
             sprintf(tmp,"error in function call!!\n\tundeclared function!!\n");
           else
 		    sprintf(tmp,"error in function call!!\n\texpected symbol type: 3 or 4 but type is %d\n",symbolTable[name].TYPE);
-          error(tmp);
-		  exit(-2);
+          myerror(tmp,2);
 	  }
 	  if (symbolTable[name].numOfArguments!=numOfArgs)
 	  {
 		  sprintf(tmp,"error in function call!!\n\texpected numberOfArguments: %d but it is %d\n",symbolTable[name].numOfArguments,numOfArgs);
-		  error(tmp);
-		  exit(-3);
+		  myerror(tmp,3);
 	  }
       /*
       for(int i=0;i<numOfArgs;i++)
@@ -288,8 +286,9 @@ void assignto(string ID)
     Node var=symbolTable[ID];
     if(var.TYPE != SEM_TYPE_VARIABLE_INT)
     {
-        error("variable has not been declared properly!");
-        exit(-10);
+        myerror("variable has not been declared properly!",11);
+        cout<<"salam"<<ID<<endl;
+        
     }
     pb.push_back("lw $s0, 0($sp)"); 
     pb.push_back("addi $sp,$sp,4");
@@ -313,8 +312,8 @@ void assigntoar(string ID)
     Node var=symbolTable[ID];
     if(var.TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
     {
-        error("variable has not been declared properly!");
-        exit(-10);
+        myerror("variable has not been declared properly!",10);
+        
     }
     pb.push_back("lw $s0, 0($sp)"); // value 
     pb.push_back("addi $sp,$sp,4");
@@ -370,8 +369,8 @@ void plusPlus(string ID,int sum,bool stayInStack=0)
     pb.push_back("add $s1,$s1,$gp");
     if(symbolTable[ID].TYPE != SEM_TYPE_VARIABLE_INT)
     {
-        error("variable is not declared yet!!");
-        exit(-14);
+        myerror("variable is not declared yet!!",14);
+        
     }
     pb.push_back("addi $s2,$s1, "+to_string(symbolTable[ID].address));
     pb.push_back("lw $s0, 0($s2)");
@@ -399,8 +398,8 @@ void plusPlusar(string ID,int sum,bool stayInStack=0)
     pb.push_back("mul $s1,$s2,$s1");
     if(symbolTable[ID].TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
     {
-        error("array is not declared yet!!");
-        exit(-14);
+        myerror("array is not declared yet!!",14);
+        
     }
     pb.push_back("add $s1,$s1,$gp");
     pb.push_back("addi $s2,$s1, "+to_string(symbolTable[ID].address));

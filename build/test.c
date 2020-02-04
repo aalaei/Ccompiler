@@ -35,9 +35,6 @@ int main()
     print(ar[n--]);
    }
    
-   
-  
-   
    //x();
    
    

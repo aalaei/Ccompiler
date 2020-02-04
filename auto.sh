@@ -19,4 +19,5 @@ cd build/
 #./pre test.c ./output_pre.c NoDef
 printf ${GREEN}"\tcompiling:\n"${NC}
 ./compiler test.c --show --pre
-printf ${CYAN}"done!\n"${NC}
+printf ${CYAN}"done!"${NC}
+printf "\n"
