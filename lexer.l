@@ -128,7 +128,7 @@ alpha ([a-zA-Z])([a-zA-Z0-9]*)
 "~" {
     return UnaryNot;
 }
-"#".* {};
+"#".* {yylineNum++;};
 
 {alpha} {
  //yylval.name = *yytext;

@@ -182,6 +182,11 @@ bool declare_Function(string name,int numOfArguments,string type)
         myerror("reserved Function!!",8);
         
     }
+    if(symbolTable[name].TYPE>=SEM_TYPE_FUNCTION_INT)
+    {
+        myerror("function already declered!!!",88);
+        return false;
+    }
     if(name=="main")
     {
         PC=tmp.address;

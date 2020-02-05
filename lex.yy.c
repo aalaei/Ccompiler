@@ -1033,7 +1033,7 @@ YY_RULE_SETUP
 case 36:
 YY_RULE_SETUP
 #line 131 "lexer.l"
-{};
+{yylineNum++;};
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
