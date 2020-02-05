@@ -14,6 +14,8 @@ cd preProcessor
 cp pre ../build/
 cd ..
 cp compiler build/
+cp compiler test\ cases//
+cp build/pre test\ cases//
 cd build/
 #printf ${GREEN}"\tprocessing:\n"${NC}
 #./pre test.c ./output_pre.c NoDef

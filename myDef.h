@@ -18,6 +18,7 @@ stack<int> instJump;
 
 extern string lastScope;
 extern string lastScope_BLOCK;
+extern int localCount;
 
 enum SemanticType{
     NONE
@@ -165,8 +166,8 @@ bool declare_IntVariable(string name,bool local=0)
         tmp.scope=2;
     }else if(lastScope_BLOCK=="BLK")
     {
-       tmp.scope=3;
-       printf("ali\n");
+       tmp.scope=localCount;
+       
     }else
         tmp.scope=1;
     tmp.address=getFree();
@@ -300,8 +301,8 @@ void assignto(string ID)
     Node var=symbolTable[ID];
     if(var.TYPE != SEM_TYPE_VARIABLE_INT)
     {
-        myerror("variable has not been declared properly!",11);
-        cout<<"salam"<<ID<<endl;
+        sprintf(tmp,"variable \"%s\" has not been declared properly!",ID.c_str());
+        myerror(tmp,11);
         
     }
     pb.push_back("lw $s0, 0($sp)"); 
@@ -326,7 +327,8 @@ void assigntoar(string ID)
     Node var=symbolTable[ID];
     if(var.TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
     {
-        myerror("variable has not been declared properly!",10);
+        sprintf(tmp,"array \"%s\" has not been declared properly!",ID.c_str());
+        myerror(tmp,10);
         
     }
     pb.push_back("lw $s0, 0($sp)"); // value 
@@ -445,13 +447,20 @@ void removeItemFromSymbolTable(string cur)
 }
 void removeLocal()
 {
+    if(localCount<=2)
+        return;
     
     for(map<string,Node>::iterator it = symbolTable.begin();it != symbolTable.end();it++)
     { 
-		if(it->second.scope==3)
+        
+		if(it->second.scope==localCount)
         {
+            
+            cout<<"local variable \""<<it->first<<"\" block finished:"<<endl;
+            cout<<"\t";
+            it->second.print(1);
+            cout<<endl;
             symbolTable.erase(it);
-            cout<<"local variable \""<<it->first<<"\" block finished"<<endl;
         }
     }
 }

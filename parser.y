@@ -13,6 +13,7 @@
  int mid;
  int yylineNum=0;
  string lastScope;
+ int localCount=2;
  string lastScope_BLOCK;
  int labelCnt=0;
 
@@ -250,15 +251,15 @@ IF:
 	ifKeyWord OpenParenthesis EXP CloseParenthesis {save();}
 ;
 BLOCK:
-  BLOCK_L CloseBrace{lastScope_BLOCK=lastScope;removeLocal();}
- | BLOCK_L error {myerror("} is missing!!",21);lastScope_BLOCK=lastScope;removeLocal();} CloseBrace
+  BLOCK_L CloseBrace{lastScope_BLOCK=lastScope;removeLocal();localCount--;}
+ | BLOCK_L error {myerror("} is missing!!",21);lastScope_BLOCK=lastScope;removeLocal();localCount--;} CloseBrace
 ;
 BLOCK_FUN:
   OpenBrace  STMTS CloseBrace
- | OpenBrace STMTS error {myerror("} is missing!!",21);removeLocal();} CloseBrace
+ | OpenBrace STMTS error {myerror("} is missing!!",21);} CloseBrace
 ;
 BLOCK_L:
-OpenBrace {lastScope_BLOCK="BLK";} STMTS
+OpenBrace {lastScope_BLOCK="BLK";localCount++;} STMTS
 ;
 
 
@@ -731,7 +732,9 @@ FACTOR:
 		char temp[500];
 		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_INT)
 		{
-			myerror("variable has not been declared properly!",10);
+			sprintf(temp,"variable \"%s\" has not been declared properly!",$1);
+			
+        	myerror(temp,10);
 			
 		}
 		if(symbolTable[$1].scope==0)
@@ -753,8 +756,8 @@ FACTOR:
 		char temp[500];
 		if(symbolTable[$1].TYPE != SEM_TYPE_VARIABLE_ARRAY_INT)
 		{
-			myerror("variable has not been declared properly!",10);
-			
+			sprintf(temp,"variable \"%s\" has not been declared properly!",$1);
+        	myerror(temp,10);
 		}
 		pb.push_back("lw $s0,0($sp)");
 		pb.push_back("addi $sp, $sp,4"); 
@@ -961,6 +964,7 @@ int main(int argc, char *argv[])
 		myerror("main function Not Found!",4);
 		
 	}
+	symbolTableShow();
 	if(ERROR_occurred)
 		return -1;
 	while(!instJump.empty())
@@ -987,7 +991,7 @@ int main(int argc, char *argv[])
     
 	fclose(yyin);
 	fclose(f1);
-	symbolTableShow();
+	
 	cout<<"PC is: "<<PC<<endl;
 
 	if(verbose)
