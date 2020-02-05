@@ -13,6 +13,7 @@
  int mid;
  int yylineNum=0;
  string lastScope;
+ string lastScope_BLOCK;
  int labelCnt=0;
 
  void yyerror(const char* error);
@@ -134,19 +135,19 @@ PROGRAM:
 PGM:
  TYPE ID OpenParenthesis CloseParenthesis 
  	 {declare_Function($2,0,$1);}
-	  BLOCK{ functionFinished(0,$2);} PGM |
+	  BLOCK_FUN{ functionFinished(0,$2);} PGM |
  TYPE ID OpenParenthesis ID CloseParenthesis 
  	 {declare_Function($2,1,$1);}{fun_var($4,1);}
-	  BLOCK{ functionFinished(1,$2);} PGM |
+	  BLOCK_FUN{ functionFinished(1,$2);} PGM |
  TYPE ID OpenParenthesis ID Comma ID CloseParenthesis 
  	 {declare_Function($2,2,$1);}{fun_var($4,1);fun_var($6,2);}
-	  BLOCK{ functionFinished(2,$2);}PGM |
+	  BLOCK_FUN{ functionFinished(2,$2);}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID CloseParenthesis 
  	 {declare_Function($2,3,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);}
-	  BLOCK { functionFinished(3,$2);}PGM |
+	  BLOCK_FUN{ functionFinished(3,$2);}PGM |
  TYPE ID OpenParenthesis ID Comma ID Comma ID Comma ID  CloseParenthesis 
  	 {declare_Function($2,4,$1);}{fun_var($4,1);fun_var($6,2);fun_var($8,3);fun_var($10,4);}
-	  BLOCK { functionFinished(4,$2);}PGM |
+	  BLOCK_FUN{ functionFinished(4,$2);}PGM |
   /*nothing!*/{}
  ;
 STMTS:
@@ -249,9 +250,17 @@ IF:
 	ifKeyWord OpenParenthesis EXP CloseParenthesis {save();}
 ;
 BLOCK:
- OpenBrace STMTS CloseBrace
- |OpenBrace STMTS error {myerror("} is missing!!",21);} CloseBrace
+  BLOCK_L CloseBrace{lastScope_BLOCK=lastScope;removeLocal();}
+ | BLOCK_L error {myerror("} is missing!!",21);lastScope_BLOCK=lastScope;removeLocal();} CloseBrace
 ;
+BLOCK_FUN:
+  OpenBrace  STMTS CloseBrace
+ | OpenBrace STMTS error {myerror("} is missing!!",21);removeLocal();} CloseBrace
+;
+BLOCK_L:
+OpenBrace {lastScope_BLOCK="BLK";} STMTS
+;
+
 
 EXP:
   TERM9 {
@@ -613,7 +622,7 @@ TERM:
 	pb.push_back("addi $sp, $sp,4"); 
 	
 	pb.push_back("mul $s2,$s1,$s0"); 
-	//????????????????????????????????????
+	
 	pb.push_back("addi $sp, $sp,-4"); 
 	pb.push_back("sw $s2,0($sp)"); 
 	

@@ -17,6 +17,8 @@ stack<long long> goodSpace;
 stack<int> instJump; 
 
 extern string lastScope;
+extern string lastScope_BLOCK;
+
 enum SemanticType{
     NONE
     ,SEM_TYPE_VARIABLE_INT
@@ -147,6 +149,11 @@ bool declare_IntVariable(string name,bool local=0)
 {
     Node tmp=Node();
     tmp.name=name;
+    if(symbolTable[name].TYPE==SEM_TYPE_VARIABLE_INT)
+    {
+        myerror("int variable already declered!!!",88);
+        return false ;
+    }
     if(local)
     {
         symbolTable[lastScope].size+=4;
@@ -156,10 +163,12 @@ bool declare_IntVariable(string name,bool local=0)
             my_stack.push(symbolTable[name]);
         }
         tmp.scope=2;
-    }else
+    }else if(lastScope_BLOCK=="BLK")
     {
+       tmp.scope=3;
+       printf("ali\n");
+    }else
         tmp.scope=1;
-    }
     tmp.address=getFree();
     tmp.numOfArguments=-1;
     tmp.TYPE=SEM_TYPE_VARIABLE_INT;
@@ -434,6 +443,18 @@ void removeItemFromSymbolTable(string cur)
         }
     }
 }
+void removeLocal()
+{
+    
+    for(map<string,Node>::iterator it = symbolTable.begin();it != symbolTable.end();it++)
+    { 
+		if(it->second.scope==3)
+        {
+            symbolTable.erase(it);
+            cout<<"local variable \""<<it->first<<"\" block finished"<<endl;
+        }
+    }
+}
 void voidReturn(string name)
 {
 
@@ -568,6 +589,11 @@ void fun_var(string name,int i)
 void declare_IntArray(string name,int ss)
 {
     Node tmp=Node();
+    if(symbolTable[name].TYPE==SEM_TYPE_VARIABLE_ARRAY_INT)
+    {
+        myerror("array already declered!!!",88);
+        return ;
+    }
     tmp.name=name;
     tmp.size=ss;
     tmp.scope=0;
